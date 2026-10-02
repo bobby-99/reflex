@@ -4,6 +4,15 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name for release (e.g. v1.0.0)'
+        required: false
+        default: 'v1.0.0'
+
+env:
+  RELEASE_TAG: ${{ github.event.inputs.tag_name || github.ref_name }}
 
 jobs:
   release:
@@ -16,6 +25,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
 
       - name: Grant Execute Permission for Gradlew
         run: chmod +x gradlew
@@ -32,8 +43,8 @@ jobs:
       - name: Extract Release Notes from CHANGELOG
         run: |
           python3 -c "
-          import sys, re
-          tag = '${{ github.ref_name }}'.lstrip('v')
+          import os, re
+          tag = os.environ.get('RELEASE_TAG', 'v1.0.0').lstrip('v')
           try:
               with open('CHANGELOG.md', 'r', encoding='utf-8') as f:
                   content = f.read()
@@ -42,9 +53,9 @@ jobs:
               if match and match.group(1).strip():
                   notes = match.group(1).strip()
               else:
-                  notes = f'Release ${{ github.ref_name }}'
+                  notes = f'Release {os.environ.get(\"RELEASE_TAG\", \"v1.0.0\")}'
           except Exception as e:
-              notes = f'Release ${{ github.ref_name }}'
+              notes = f'Release {os.environ.get(\"RELEASE_TAG\", \"v1.0.0\")}'
           with open('release_notes.md', 'w', encoding='utf-8') as f:
               f.write(notes + '\n')
           "
@@ -59,7 +70,7 @@ jobs:
           fi
 
       - name: Check Signing Secrets for Stable Release
-        if: ${{ !contains(github.ref_name, '-') }}
+        if: ${{ !contains(env.RELEASE_TAG, '-') }}
         run: |
           if [ -z "${{ env.KEYSTORE_FILE }}" ] && [ -z "${{ secrets.KEYSTORE_FILE }}" ]; then
             echo "::error::Stable release builds require signing configuration! Please configure KEYSTORE_BASE64 (or KEYSTORE_FILE), KEYSTORE_PASSWORD, KEY_ALIAS, and KEY_PASSWORD secrets."
@@ -78,7 +89,7 @@ jobs:
         run: ./gradlew assembleRelease --no-daemon
 
       - name: Verify APK Signature for Stable Release
-        if: ${{ !contains(github.ref_name, '-') }}
+        if: ${{ !contains(env.RELEASE_TAG, '-') }}
         run: |
           APK_PATH=$(ls app/build/outputs/apk/release/*.apk | head -n 1)
           $ANDROID_HOME/build-tools/35.0.0/apksigner verify --verbose "$APK_PATH" || (echo "::error::Release APK verification failed!" && exit 1)
@@ -87,17 +98,18 @@ jobs:
         run: |
           mkdir -p release_artifacts
           APK_PATH=$(ls app/build/outputs/apk/release/*.apk | head -n 1)
-          cp "$APK_PATH" "release_artifacts/Reflex-${{ github.ref_name }}.apk"
+          cp "$APK_PATH" "release_artifacts/Reflex-${{ env.RELEASE_TAG }}.apk"
           cd release_artifacts
-          sha256sum "Reflex-${{ github.ref_name }}.apk" > "Reflex-${{ github.ref_name }}.apk.sha256"
+          sha256sum "Reflex-${{ env.RELEASE_TAG }}.apk" > "Reflex-${{ env.RELEASE_TAG }}.apk.sha256"
           cd ..
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ env.RELEASE_TAG }}
           files: |
-            release_artifacts/Reflex-${{ github.ref_name }}.apk
-            release_artifacts/Reflex-${{ github.ref_name }}.apk.sha256
+            release_artifacts/Reflex-${{ env.RELEASE_TAG }}.apk
+            release_artifacts/Reflex-${{ env.RELEASE_TAG }}.apk.sha256
           body_path: release_notes.md
           draft: false
-          prerelease: ${{ contains(github.ref_name, '-') }}
+          prerelease: ${{ contains(env.RELEASE_TAG, '-') }}
