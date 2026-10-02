@@ -126,7 +126,7 @@ Read the full statement in [PRIVACY.md](PRIVACY.md).
 
 | Source | Notes |
 | :--- | :--- |
-| [GitHub Releases](https://github.com/bobby-99/reflex/releases/latest) | Download `reflex-vX.Y.Z-release-unsigned.apk` (or signed release) and SHA-256 checksum. Allow installs from your browser or file manager if Android asks. |
+| [GitHub Releases](https://github.com/bobby-99/reflex/releases/latest) | Download `Reflex-vX.Y.Z.apk` and `Reflex-vX.Y.Z.apk.sha256`. Allow installs from your browser or file manager if Android asks. |
 | F-Droid | *Coming soon.* |
 
 Requires Android 8.0 (API 26) or newer, and is built and tested for Android 16.

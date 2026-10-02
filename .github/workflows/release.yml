@@ -29,21 +29,75 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Extract Release Notes from CHANGELOG
+        run: |
+          python3 -c "
+          import sys, re
+          tag = '${{ github.ref_name }}'.lstrip('v')
+          try:
+              with open('CHANGELOG.md', 'r', encoding='utf-8') as f:
+                  content = f.read()
+              pattern = rf'## \[{re.escape(tag)}\][^\n]*\n(.*?)(?=\n## \[|\Z)'
+              match = re.search(pattern, content, re.DOTALL)
+              if match and match.group(1).strip():
+                  notes = match.group(1).strip()
+              else:
+                  notes = f'Release ${{ github.ref_name }}'
+          except Exception as e:
+              notes = f'Release ${{ github.ref_name }}'
+          with open('release_notes.md', 'w', encoding='utf-8') as f:
+              f.write(notes + '\n')
+          "
+
+      - name: Setup Keystore if Provided
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > /tmp/release.keystore
+            echo "KEYSTORE_FILE=/tmp/release.keystore" >> $GITHUB_ENV
+          fi
+
+      - name: Check Signing Secrets for Stable Release
+        if: ${{ !contains(github.ref_name, '-') }}
+        run: |
+          if [ -z "${{ env.KEYSTORE_FILE }}" ] && [ -z "${{ secrets.KEYSTORE_FILE }}" ]; then
+            echo "::error::Stable release builds require signing configuration! Please configure KEYSTORE_BASE64 (or KEYSTORE_FILE), KEYSTORE_PASSWORD, KEY_ALIAS, and KEY_PASSWORD secrets."
+            exit 1
+          fi
+
       - name: Run Unit Tests
         run: ./gradlew testDebugUnitTest --no-daemon
 
       - name: Build Release APK
+        env:
+          KEYSTORE_FILE: ${{ env.KEYSTORE_FILE || secrets.KEYSTORE_FILE }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: ./gradlew assembleRelease --no-daemon
 
-      - name: Rename Release APK
+      - name: Verify APK Signature for Stable Release
+        if: ${{ !contains(github.ref_name, '-') }}
+        run: |
+          APK_PATH=$(ls app/build/outputs/apk/release/*.apk | head -n 1)
+          $ANDROID_HOME/build-tools/35.0.0/apksigner verify --verbose "$APK_PATH" || (echo "::error::Release APK verification failed!" && exit 1)
+
+      - name: Package Release Assets
         run: |
           mkdir -p release_artifacts
-          cp app/build/outputs/apk/release/*.apk release_artifacts/reflex-${{ github.ref_name }}-release-unsigned.apk || true
+          APK_PATH=$(ls app/build/outputs/apk/release/*.apk | head -n 1)
+          cp "$APK_PATH" "release_artifacts/Reflex-${{ github.ref_name }}.apk"
+          cd release_artifacts
+          sha256sum "Reflex-${{ github.ref_name }}.apk" > "Reflex-${{ github.ref_name }}.apk.sha256"
+          cd ..
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: release_artifacts/*.apk
+          files: |
+            release_artifacts/Reflex-${{ github.ref_name }}.apk
+            release_artifacts/Reflex-${{ github.ref_name }}.apk.sha256
+          body_path: release_notes.md
           draft: false
-          prerelease: false
-          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}

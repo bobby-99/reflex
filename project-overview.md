@@ -2,7 +2,7 @@
 
 ## 1. Concept
 
-Reflex is a **local-first, timer-driven routine, habit, task tracker, and focus management system** for Android 16 (API Level 36). It is a private, personal-use application built from the ground up with:
+Reflex is a **local-first, timer-driven routine, habit, task tracker, and focus management system** for Android. It is built from the ground up with:
 
 - **Reflex Design System v1.0**: Warm organic obsidian dark mode (`#0A0908`), warm paper light mode (`#F7F3EE`), signature metallic copper accents (`#D9A184` dark / `#8F4C2B` light), handcrafted Lora serif typography with tabular numerals (`tnum`), softer curvature (radii $\ge 16\text{dp}$ everywhere), and universal sentence-case copy.
 - **Floating Frosted Glass Tab Bar**: 72dp stadium pill floating 24dp above navigation bar insets, powered by the Haze library (`dev.chrisbanes.haze`) with API 31+ hardware backdrop blur (24dp blur radius, 72% tint) and an accessible 94% tint fallback.
@@ -14,9 +14,7 @@ Reflex is a **local-first, timer-driven routine, habit, task tracker, and focus 
   4. **Habits**: Daily habit tracker supporting custom schedules (Daily, Weekdays, Weekends, Custom Days), OpenMoji visual icons, interactive 32dp completion rings, and streak metrics.
   5. **Focus**: Classic Pomodoro & Zen Flow timers (Timed & Open Flow) with a 3D hero sphere, pinned Start button, low-latency synthesized ambient tick (`f_tick`), flexible 0m break removal, non-invasive app-blocking overlay engine, and a 52-week activity heatmap.
 - **System-Wide Priority Overlays & Exact Alarms**: Full-screen floating overlay dialog (`TYPE_APPLICATION_OVERLAY` + `showWhenLocked`) that alerts users to medium and high priority tasks over any active app with 6-option snooze chips, with automatic alarm cancellation upon task deletion.
-- **Comprehensive Native Settings & User Profile (`reflex-settings.html`)**: Native Compose implementation featuring a personalized User Profile header (custom photo / Thunder vector fallback, 48dp camera touch target, Name & Bio), live diagnostic permissions hub (Overlay, Tri-state Calendar, Notification Channels, Exact Alarms, Battery Optimization), transactional JSON export/import with rollback, WorkManager automated weekly backups (`d_auto`), non-destructive onboarding tour replay, and an animated 3-way sliding pill theme switcher.
-
-This is a personal project for private, personal use.
+- **Comprehensive Native Settings & User Profile**: Native Compose implementation featuring a personalized User Profile header (custom photo / Thunder vector fallback, 48dp camera touch target, Name & Bio), live diagnostic permissions hub (Overlay, Tri-state Calendar, Notification Channels, Exact Alarms, Battery Optimization), transactional JSON export/import with rollback, WorkManager automated weekly backups (`d_auto`), non-destructive onboarding tour replay, and an animated 3-way sliding pill theme switcher.
 
 ---
 
@@ -65,7 +63,7 @@ This is a personal project for private, personal use.
 1. **Task Data Model (`Task.kt`)**:
    - Properties: `id`, `title`, `notes`, `dueDate`, `dueTime`, `priority` (NONE, LOW, MEDIUM, HIGH), `isCompleted`, `completedAt`, `createdAt`, `reminderTime`.
    - Recurrence Fields: `recurrenceFrequency` (NONE, DAILY, WEEKLY, MONTHLY, YEARLY, CUSTOM), `recurrenceInterval`, `recurrenceUnit` (DAY, WEEK, MONTH, YEAR), `recurrenceDaysOfWeek` ("MON,WED,FRI"), `recurrenceMonthlyMode` (SAME_DATE, SAME_WEEKDAY_POS), `recurrenceEndType` (NEVER, ON_DATE, AFTER_OCCURRENCES), `recurrenceEndDate`, `recurrenceEndOccurrences`, `recurrenceBasis` (FROM_DUE_DATE, FROM_COMPLETION_DATE), `recurrenceOccurrenceCount`.
-2. **Modern v3 Tasks UI (`TasksScreen.kt`)**:
+2. **Tasks UI (`TasksScreen.kt`)**:
    - **Progress Card**: 26dp rounded surface displaying `{done} of {total} done today`, percentage readout, and animated copper progress bar.
    - **Sticky Filter Chips**: Full-bleed horizontally scrollable chips (**All**, **Today**, **Upcoming**, **No date**, **Completed**) with live task counts.
    - **Structured Grouping**: Sections for **Overdue** (crimson header), **Today**, **Upcoming**, **No date**, and a collapsible **Completed** row.
@@ -155,7 +153,7 @@ This is a personal project for private, personal use.
    - Automatically pauses blocking during breaks, timer pause states, or session completion.
    - Always-exempt apps: Reflex, Phone dialer, SMS, Settings, and System UI launcher.
 4. **Native Focus Analytics Screen (`FocusAnalyticsScreen.kt`, `FocusAnalyticsViewModel.kt`)**:
-   - Pixel-accurate native build of `focus-analytics.html` (`anHTML()`) adhering strictly to Design System v3.0 tokens, Lora typography with tabular numbers (`tnum`), and zero hex literals.
+   - Pixel-accurate native build adhering strictly to Design System v1.0 tokens, Lora typography with tabular numbers (`tnum`), and zero hex literals.
    - **Entry & Navigation**: Accessible from the Focus top bar (order: App Blocking, Analytics, Settings); back button (44dp visual, 48dp target) returns to Focus home; bottom navigation bar remains visible (`showBottomBar` includes `FocusAnalytics`, mapped to `NavTab.FOCUS`); scroll state retained via `rememberSaveable`.
    - **Top-to-Bottom Components**:
      1. Range Selector: Week (7d) / Month (30d) / Year (12m) segmented pill.
@@ -245,7 +243,7 @@ This is a personal project for private, personal use.
 
 ## 3. Tech Stack
 
-- **Language & UI Toolkit**: Kotlin 2.0+ & Jetpack Compose (Material3 + Custom Reflex v3 Tokens)
+- **Language & UI Toolkit**: Kotlin 2.0+ & Jetpack Compose (Material3 + Custom Reflex Design System v1.0 Tokens)
 - **Design Tokens**: `ReflexTokens.kt`, `Color.kt`, `Type.kt`, `SettingsTheme.kt`
 - **Typography**: Bundled Lora Serif (400 Regular, 500 Medium, 600 SemiBold, 700 Bold) with `fontFeatureSettings = "tnum"`
 - **Backdrop Blur Engine**: Haze (`dev.chrisbanes.haze`)
