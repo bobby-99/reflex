@@ -1,0 +1,22 @@
+# Set default behavior to automatically normalize line endings.
+* text=auto eol=lf
+
+# Force scripts to LF
+*.sh text eol=lf
+gradlew text eol=lf
+
+# Windows batch files must have CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ttf binary
+*.otf binary
+*.jar binary
+*.aar binary
+*.so binary
+*.jks binary
+*.keystore binary

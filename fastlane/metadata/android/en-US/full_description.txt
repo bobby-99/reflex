@@ -1,0 +1,13 @@
+Reflex is a calm, local-first productivity assistant for Android designed around tactile design, frosted glass aesthetics, and absolute privacy.
+
+Features:
+• Step-by-step sequential routines with audio cues, confetti, and starter templates.
+• Smart tasks with priority levels (P1–P4), recurrence rules, and exact alarm notifications.
+• Daily habit tracking with numeric goals, annual contribution heatmaps, and streak statistics.
+• Deep focus timers with Pomodoro, interval, and open flow sessions, accompanied by ambient audio ticks.
+• Distraction shield with app blocking overlay to stay in flow.
+• Unified daily calendar linking routines, scheduled tasks, and device calendars.
+• 6 curated color themes based on Design System v1.0.
+• Complete data sovereignty: 100% offline Room database, no network permissions, and full JSON export/import.
+
+Reflex is free and open-source software licensed under GPL-3.0-or-later.

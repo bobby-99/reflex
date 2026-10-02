@@ -1,0 +1,52 @@
+# Built application files
+*.apk
+*.aar
+*.ap_
+*.aab
+*.dex
+*.class
+
+# Generated build directories
+bin/
+gen/
+out/
+build/
+app/build/
+.gradle/
+.kotlin/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Local configuration & environment
+local.properties
+keystore.properties
+google-services.json
+
+# Android Studio & IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Signing keys & secrets
+*.jks
+*.keystore
+*.p12
+*.pepk
+
+# Log files & scratch output
+*.log
+build_output.txt
+*.tmp
+*.bak
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Agent & tool scratch directories
+.antigravity/
+.agent/
+.gemini/

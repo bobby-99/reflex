@@ -1,0 +1,4 @@
+Initial release of Reflex (v1.0.0):
+• Calm, local-first routines, tasks, habits, deep focus timer, and calendar.
+• 100% offline with zero network permissions and no analytics.
+• 6 curated aesthetic themes and complete JSON data export/import.

@@ -1,0 +1,39 @@
+Categories:
+  - Productivity
+  - Time
+License: GPL-3.0-or-later
+AuthorName: bobby-99
+AuthorEmail: reflexhelpdesk.unworried192@simplelogin.com
+SourceCode: https://github.com/bobby-99/reflex
+IssueTracker: https://github.com/bobby-99/reflex/issues
+
+AutoName: Reflex
+Summary: Calm, local-first routines, tasks, habits, focus, and calendar
+Description: |-
+  Reflex is a calm, local-first productivity assistant for Android designed
+  around tactile design, frosted glass aesthetics, and absolute privacy.
+
+  Features:
+  * Step-by-step sequential routines with audio cues and starter templates
+  * Smart tasks with priority levels (P1-P4), recurrence, and exact alarms
+  * Daily habit tracking with numeric goals, annual heatmaps, and streak statistics
+  * Deep focus timers with Pomodoro, interval, and open flow sessions
+  * Distraction shield with app blocking overlay
+  * Unified daily calendar linking routines, tasks, and device calendars
+  * 100% offline with zero network permissions and full local JSON backup
+
+RepoType: git
+Repo: https://github.com/bobby-99/reflex.git
+
+Builds:
+  - versionName: '1.0.0'
+    versionCode: 1
+    commit: v1.0.0
+    subdir: app
+    gradle:
+      - yes
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: '1.0.0'
+CurrentVersionCode: 1

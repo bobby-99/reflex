@@ -1,0 +1,33 @@
+name: Feature Request
+description: Propose an idea, improvement, or new feature for Reflex
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Reflex is a local-first, privacy-focused productivity app.
+        **Note:** Features requiring cloud accounts, proprietary analytics, or network syncing are out of scope.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Is your feature request related to a problem?
+      description: A clear and concise description of what the pain point is.
+      placeholder: "I find it difficult to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Describe the Solution You'd Like
+      description: A clear and concise description of what you want to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Solutions Considered
+      description: Any alternative solutions or features you've considered.

@@ -1,0 +1,367 @@
+[
+  {
+    "unicode": "1F3CB",
+    "name": "Lifting Weights",
+    "category": "fitness"
+  },
+  {
+    "unicode": "1F3C3",
+    "name": "Runner",
+    "category": "fitness"
+  },
+  {
+    "unicode": "1F6B4",
+    "name": "Cyclist",
+    "category": "fitness"
+  },
+  {
+    "unicode": "1F9D8",
+    "name": "Meditation",
+    "category": "fitness"
+  },
+  {
+    "unicode": "1F4AA",
+    "name": "Muscle",
+    "category": "fitness"
+  },
+  {
+    "unicode": "26F9",
+    "name": "Person with Ball",
+    "category": "fitness"
+  },
+  {
+    "unicode": "1F9B8",
+    "name": "Superhero",
+    "category": "fitness"
+  },
+  {
+    "unicode": "1F938",
+    "name": "Acrobat",
+    "category": "fitness"
+  },
+  {
+    "unicode": "1F3AF",
+    "name": "Bullseye Target",
+    "category": "fitness"
+  },
+  {
+    "unicode": "1F3C0",
+    "name": "Basketball",
+    "category": "fitness"
+  },
+  {
+    "unicode": "26BD",
+    "name": "Soccer Ball",
+    "category": "fitness"
+  },
+  {
+    "unicode": "1F3CA",
+    "name": "Swimming",
+    "category": "fitness"
+  },
+  {
+    "unicode": "1F3C4",
+    "name": "Surfing",
+    "category": "fitness"
+  },
+  {
+    "unicode": "1F3B3",
+    "name": "Bowling",
+    "category": "fitness"
+  },
+  {
+    "unicode": "1F3D0",
+    "name": "Volleyball",
+    "category": "fitness"
+  },
+  {
+    "unicode": "1F3D2",
+    "name": "Ice Hockey",
+    "category": "fitness"
+  },
+  {
+    "unicode": "1F3D3",
+    "name": "Ping Pong",
+    "category": "fitness"
+  },
+  {
+    "unicode": "1F3BE",
+    "name": "Tennis",
+    "category": "fitness"
+  },
+  {
+    "unicode": "26A1",
+    "name": "Lightning Energy",
+    "category": "fitness"
+  },
+  {
+    "unicode": "1F31E",
+    "name": "Sun Face",
+    "category": "nature"
+  },
+  {
+    "unicode": "1F319",
+    "name": "Crescent Moon",
+    "category": "nature"
+  },
+  {
+    "unicode": "1F30A",
+    "name": "Water Wave",
+    "category": "nature"
+  },
+  {
+    "unicode": "1F331",
+    "name": "Seedling",
+    "category": "nature"
+  },
+  {
+    "unicode": "1F339",
+    "name": "Rose",
+    "category": "nature"
+  },
+  {
+    "unicode": "1F33B",
+    "name": "Sunflower",
+    "category": "nature"
+  },
+  {
+    "unicode": "1F34E",
+    "name": "Red Apple",
+    "category": "nature"
+  },
+  {
+    "unicode": "1F354",
+    "name": "Burger",
+    "category": "nature"
+  },
+  {
+    "unicode": "1F525",
+    "name": "Fire",
+    "category": "nature"
+  },
+  {
+    "unicode": "1F4A6",
+    "name": "Water Droplets",
+    "category": "nature"
+  },
+  {
+    "unicode": "1F34F",
+    "name": "Green Apple",
+    "category": "nature"
+  },
+  {
+    "unicode": "1F34C",
+    "name": "Banana",
+    "category": "nature"
+  },
+  {
+    "unicode": "1F347",
+    "name": "Grapes",
+    "category": "nature"
+  },
+  {
+    "unicode": "1F353",
+    "name": "Strawberry",
+    "category": "nature"
+  },
+  {
+    "unicode": "1F355",
+    "name": "Pizza",
+    "category": "nature"
+  },
+  {
+    "unicode": "26FE",
+    "name": "Coffee Cup",
+    "category": "nature"
+  },
+  {
+    "unicode": "1F48A",
+    "name": "Medicine Pill",
+    "category": "nature"
+  },
+  {
+    "unicode": "1F6BF",
+    "name": "Shower Bath",
+    "category": "nature"
+  },
+  {
+    "unicode": "1F4A4",
+    "name": "Zzz Sleep",
+    "category": "nature"
+  },
+  {
+    "unicode": "1F4DA",
+    "name": "Books Stack",
+    "category": "objects"
+  },
+  {
+    "unicode": "1F4A1",
+    "name": "Light Bulb",
+    "category": "objects"
+  },
+  {
+    "unicode": "1F680",
+    "name": "Rocket Launch",
+    "category": "objects"
+  },
+  {
+    "unicode": "1F527",
+    "name": "Wrench Tool",
+    "category": "objects"
+  },
+  {
+    "unicode": "2764",
+    "name": "Red Heart",
+    "category": "objects"
+  },
+  {
+    "unicode": "1F31F",
+    "name": "Glowing Star",
+    "category": "objects"
+  },
+  {
+    "unicode": "1F3A8",
+    "name": "Artist Palette",
+    "category": "objects"
+  },
+  {
+    "unicode": "1F9D0",
+    "name": "Monocle Face",
+    "category": "objects"
+  },
+  {
+    "unicode": "1F4D6",
+    "name": "Open Book",
+    "category": "objects"
+  },
+  {
+    "unicode": "1F4DD",
+    "name": "Memo Pad",
+    "category": "objects"
+  },
+  {
+    "unicode": "1F4BB",
+    "name": "Laptop",
+    "category": "objects"
+  },
+  {
+    "unicode": "1F3A7",
+    "name": "Headphones",
+    "category": "objects"
+  },
+  {
+    "unicode": "1F6CF",
+    "name": "Bed Rest",
+    "category": "objects"
+  },
+  {
+    "unicode": "1F9F9",
+    "name": "Broom Clean",
+    "category": "objects"
+  },
+  {
+    "unicode": "23F0",
+    "name": "Alarm Clock",
+    "category": "objects"
+  },
+  {
+    "unicode": "1F3C6",
+    "name": "Trophy Gold",
+    "category": "objects"
+  },
+  {
+    "unicode": "1F511",
+    "name": "Key",
+    "category": "objects"
+  },
+  {
+    "unicode": "1F381",
+    "name": "Wrapped Gift",
+    "category": "objects"
+  },
+  {
+    "unicode": "1F4CA",
+    "name": "Bar Chart",
+    "category": "objects"
+  },
+  {
+    "unicode": "1F514",
+    "name": "Bell",
+    "category": "objects"
+  },
+  {
+    "unicode": "1F4F7",
+    "name": "Camera",
+    "category": "objects"
+  },
+  {
+    "unicode": "1F600",
+    "name": "Grinning Smile",
+    "category": "smileys"
+  },
+  {
+    "unicode": "1F602",
+    "name": "Tears of Joy",
+    "category": "smileys"
+  },
+  {
+    "unicode": "1F60D",
+    "name": "Heart Eyes",
+    "category": "smileys"
+  },
+  {
+    "unicode": "1F643",
+    "name": "Upside Down",
+    "category": "smileys"
+  },
+  {
+    "unicode": "1F601",
+    "name": "Beaming Face",
+    "category": "smileys"
+  },
+  {
+    "unicode": "1F60E",
+    "name": "Cool Sunglasses",
+    "category": "smileys"
+  },
+  {
+    "unicode": "1F914",
+    "name": "Thinking Face",
+    "category": "smileys"
+  },
+  {
+    "unicode": "1F973",
+    "name": "Partying Face",
+    "category": "smileys"
+  },
+  {
+    "unicode": "1F634",
+    "name": "Sleeping Face",
+    "category": "smileys"
+  },
+  {
+    "unicode": "1F60C",
+    "name": "Relieved Face",
+    "category": "smileys"
+  },
+  {
+    "unicode": "1F61C",
+    "name": "Winking Tongue",
+    "category": "smileys"
+  },
+  {
+    "unicode": "1F970",
+    "name": "Smiling Hearts",
+    "category": "smileys"
+  },
+  {
+    "unicode": "1F929",
+    "name": "Star Struck",
+    "category": "smileys"
+  },
+  {
+    "unicode": "1F97A",
+    "name": "Pleading Eyes",
+    "category": "smileys"
+  }
+]
