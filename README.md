@@ -1,168 +1,236 @@
-# Reflex
+<div align="center">
+  <img src="fastlane/metadata/android/en-US/images/icon.png" alt="Reflex icon" width="112" height="112">
+  <h1>Reflex</h1>
+  <p><strong>Routines, habits, tasks and deep focus, in one calm app that never leaves your phone.</strong></p>
 
-<p align="center">
-  <strong>Calm, local-first productivity for Android.</strong><br>
-  Routines &bull; Tasks &bull; Habits &bull; Focus &bull; App Blocking &bull; Calendar
-</p>
+  <!-- After the F-Droid merge request is accepted, replace the badge below with:
+  [![F-Droid](https://img.shields.io/f-droid/v/com.reflex.productivity?style=flat-square)](https://f-droid.org/packages/com.reflex.productivity)
+  -->
 
-<p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="License: GPL-3.0-or-later"></a>
-  <a href="https://github.com/bobby-99/reflex/releases"><img src="https://img.shields.io/badge/Release-1.0.0-emerald.svg" alt="Latest Release"></a>
-  <img src="https://img.shields.io/badge/Offline-100%25%20Local-success.svg" alt="100% Local">
-  <img src="https://img.shields.io/badge/Tracking-Zero%20Analytics-red.svg" alt="Zero Analytics">
-</p>
-
----
-
-## Overview
-
-**Reflex** is an intentional, privacy-respecting productivity assistant built entirely in Kotlin and Jetpack Compose. Designed around tactile design, soft frosted glass aesthetics, and strict offline principles, Reflex combines routine execution, smart task organization, habit tracking, deep focus timers with optional distraction shielding, and calendar integration into one cohesive experience.
-
-### Why Reflex?
-- **100% Local-First**: No servers, no accounts, no cloud sync, no tracking. All your data lives solely in a local Room SQLite database on your device.
-- **Zero Network Permission**: The app does not request or contain `android.permission.INTERNET`. It is physically incapable of transmitting your data over the internet.
-- **Design System v1.0**: Built with bespoke typography (Lora), tactile micro-interactions, custom spring physics, and subtle frosted blur materials.
-- **Full Data Sovereignty**: Export and import your entire workspace as unencrypted, human-readable JSON files whenever you wish.
+  <p>
+    <a href="#-features">Features</a> ·
+    <a href="#-screenshots">Screenshots</a> ·
+    <a href="#-install">Install</a> ·
+    <a href="#-privacy-by-design">Privacy</a> ·
+    <a href="#-build-from-source">Build</a> ·
+    <a href="#-contributing">Contribute</a>
+  </p>
+</div>
 
 ---
 
-## Features
+## Why Reflex
 
-### 🌅 Routines
-- Step-by-step sequential routine runner with timer support.
-- Custom recurrence rules (daily, weekly, specific days).
-- Audio chimes, celebratory confetti, and completion summaries.
-- Pre-built morning, evening, and work-shutdown starter routines.
+Most productivity apps want an account, a subscription and your data. Reflex wants none of them.
 
-### 📅 Calendar & Timeline
-- Unified daily schedule integrating routines, timed tasks, and device calendars.
-- Bi-directional local sync with Android's native Calendar Provider (`READ_CALENDAR` / `WRITE_CALENDAR`).
-- Full offline privacy: device calendar events stay on your phone.
+It is a timer-driven routine runner, habit tracker, task manager and focus companion that works 100% offline. There is no sign-in, no cloud, no analytics and no network permission. Everything lives in a local database on your device, and you can export it any time as a plain JSON file.
 
-### ✅ Smart Tasks
-- Priority scoring (P1 urgent to P4 casual).
-- Natural recurrence support (daily, weekly, weekdays, custom intervals).
-- Exact-time reminder notifications with Doze mode immunity.
-- Full-screen priority alerts for critical commitments.
-
-### 📈 Habits & Heatmaps
-- Daily checkboxes and numeric target counters (e.g. glasses of water, pages read).
-- Yearly contribution heatmaps, streak counts, and consistency analysis.
-- Monthly snapshot performance reports.
-
-### ⏳ Focus Timer & Distraction Shielding
-- Pomodoro, short/long intervals, and open flow sessions.
-- Ambient ticking cues and audio completions.
-- **App Blocking**: Restrict distracting apps during active focus sessions using Android Usage Stats and Overlay windowing.
-
-### ⚙️ Settings, Themes & Backups
-- 6 curated aesthetic themes: Obsidian, Warm Amber, Slate Dusk, Emerald, Rose Gold, Midnight.
-- Live local storage statistics breakdown (database files, item counts, cache).
-- Automated weekly backups to a user-selected local directory with retention pruning.
-- Full backup export/import via Android Storage Access Framework (SAF).
+It is also built to be pleasant to look at: warm paper in light mode, obsidian in dark, a single copper accent, bundled Lora typography and soft, rounded surfaces.
 
 ---
 
-## Permissions Breakdown
+## 📸 Screenshots
 
-Reflex requests only the permissions necessary to provide local device automation. It contains **no network permissions**.
+<div align="center">
+  <table>
+    <tr>
+      <td align="center"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" width="190" alt="Routines"><br><sub>Routines</sub></td>
+      <td align="center"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" width="190" alt="Tasks"><br><sub>Tasks</sub></td>
+      <td align="center"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="190" alt="Focus"><br><sub>Focus</sub></td>
+    </tr>
+    <tr>
+      <td align="center"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4.png" width="190" alt="Focus analytics"><br><sub>Focus analytics</sub></td>
+      <td align="center"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5.png" width="190" alt="Habits"><br><sub>Habits</sub></td>
+      <td align="center"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/6.png" width="190" alt="Calendar"><br><sub>Calendar</sub></td>
+    </tr>
+  </table>
+</div>
 
-| Permission | Purpose |
+---
+
+## ✨ Features
+
+### Routines
+Build a routine from sequential steps and let Reflex run it for you.
+- Three step types: **Timed**, **Check-off** and **Repeat-count**, with an optional 10 to 30 second rest between steps and a "Skip rest" button
+- Audio and haptic cues, keep-screen-on while running, and a foreground service so a timer survives leaving the app
+- Drag-and-drop step reordering
+- Starter templates: *Morning Routine*, *Night Wind-Down*, *Focus Pomodoro*, *7-Minute Workout* and *Daily Reset*
+- Schedule-aware streaks with a one-day grace period ("completed late"), a "Skip today" option and a four-state heatmap: *on time*, *late*, *skipped*, *missed*
+
+### Tasks
+- Due dates and times, notes, priorities (none, low, medium, high) and full recurrence (daily, weekly, monthly, yearly, custom), counted from the due date or from completion
+- Filters with live counts: *All*, *Today*, *Upcoming*, *No date*, *Completed*
+- Swipe right to complete, swipe left to delete, with undo
+- Natural-language Quick Add that parses dates, times, priorities and repeats as you type, with live highlighting (see the [syntax](#-quick-add-syntax) below)
+- Priority alerts for medium and high tasks: a floating card over any app and a lock-screen alert with Mark done, Open and snooze chips (5 min, 10 min, 15 min, 30 min, 1 hour, Tomorrow)
+
+### Habits
+- Daily, weekdays, weekends or specific days, with an optional daily reminder
+- Completion rings, a Monday to Sunday week view, and current and best streaks that respect each habit's schedule
+- A bundled [OpenMoji](https://openmoji.org/) emoji picker organized by *Wellness*, *Exercise*, *Mind*, *Nutrition* and *Productivity*
+
+### Focus
+- Classic Pomodoro (25 / 5 / 15 over four cycles, fully adjustable), Timed Flow (15 to 120 minutes) and Open Flow (count up, no target)
+- A liquid hero timer, a cycle strip, optional auto-start for breaks, and a link to the task you are working on
+- App blocking during focus phases, with a "Back to focus" overlay. It pauses on breaks and always lets Phone, Messages and system settings through
+- Focus analytics: a daily goal ring, week, month and year charts, a 365-day consistency heatmap, time-of-day and session-type breakdowns, and your top tasks
+
+### Calendar
+- An agenda timeline that hides empty days, a compact week strip and an expandable month grid
+- Tasks, routines and (optionally) your device calendars side by side, color-coded and configurable (look-ahead window, first day of the week, what to include)
+
+### Settings, backup and reliability
+- System, Dark and Light themes with a smooth switcher
+- Live permission diagnostics that tell you exactly what is granted and take you straight to the right system page
+- One-tap JSON export and import of routines, tasks, habits, focus history, your profile and your preferences
+- Reminders use the system alarm-clock API, so they keep firing under Doze, and they are restored after a reboot or an app update
+- A replayable onboarding tour and a built-in way to send feedback
+
+---
+
+## ⌨️ Quick Add syntax
+
+Type naturally. Reflex pulls out what it understands and keeps the rest as the title.
+
+| You type | Meaning |
 | :--- | :--- |
-| `RECEIVE_BOOT_COMPLETED` | Reschedules scheduled task and routine alarms after device reboot. |
-| `POST_NOTIFICATIONS` | Delivers local task reminders, routine alerts, and active timer notifications (Android 13+). |
-| `SCHEDULE_EXACT_ALARM` | Schedules exact-time reminders so notifications arrive precisely on time. |
-| `USE_EXACT_ALARM` | Ensures alarms fire reliably even during battery saver / Doze modes. |
-| `FOREGROUND_SERVICE` | Keeps the countdown timer active and visible while running focus or routine sessions. |
-| `FOREGROUND_SERVICE_SPECIAL_USE` | Complies with Android 14 foreground service type requirements for countdown timers. |
-| `VIBRATE` | Provides haptic feedback for timers, completions, and alerts. |
-| `PACKAGE_USAGE_STATS` *(Optional)* | Detects foreground package changes to trigger the distraction shield during focus sessions. |
-| `SYSTEM_ALERT_WINDOW` *(Optional)* | Displays the blocking screen when opening a blocked app during focus mode. |
-| `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` *(Optional)* | Prevents aggressive OEM background cleaners from killing active timers. |
-| `READ_CALENDAR` / `WRITE_CALENDAR` *(Optional)* | Reads and writes events to your local device calendar. |
+| `today`, `tmrw`, `tonight`, `next week`, `in 5 days` | Relative dates |
+| `5pm`, `17:30`, `morning`, `noon`, `eod`, `midnight` | Times and times of day |
+| `in 45 mins`, `in 1hr 4min` | Relative durations |
+| `!!!` · `p1` · `urgent` · `asap` | High priority |
+| `!!` · `p2` | Medium priority |
+| `!` · `p3` | Low priority |
+| `every tuesday`, `every 2 weeks`, `repeat every weekday` | Recurrence |
+
+> **Examples:**
+> - `Submit report tmrw 5pm !!!`
+> - `Standup every tuesday 9am`
+> - `Water plants every 2 weeks`
+> - `Stretch in 45 mins`
 
 ---
 
-## Installation
+## 🔒 Privacy by design
 
-### GitHub Releases
-Download the latest APK from the [Releases](https://github.com/bobby-99/reflex/releases) page.
+- **No network access.** The app does not declare the `INTERNET` permission, so it physically cannot send your data anywhere.
+- **No accounts, no analytics, no ads, no trackers.**
+- **Your data is yours.** It lives in a local database. Android's cloud backup is turned off, and export files are plain JSON you control (they are not encrypted, so store them somewhere you trust).
+- **Feedback is opt-in.** The feedback rows just open your own email app with a pre-filled message you can edit before sending.
 
-### F-Droid
-*F-Droid package submission in progress.*
-
-> [!IMPORTANT]
-> **Switching Installation Sources**: APKs built and signed by GitHub Releases and F-Droid use different signing keys. If you switch between GitHub and F-Droid builds, Android requires you to uninstall the old version first. **Always perform a backup in Settings > Export Data before switching sources.**
+Read the full statement in [PRIVACY.md](PRIVACY.md).
 
 ---
 
-## Building from Source
+## 📲 Install
 
-### Prerequisites
-- **JDK**: Java 17 or higher
-- **Android SDK**: API 35 (Android 15) build tools
-- **Android Studio**: Ladybug / Meerkat or newer (optional, for IDE development)
+| Source | Notes |
+| :--- | :--- |
+| [GitHub Releases](https://github.com/bobby-99/reflex/releases/latest) | Download `reflex-vX.Y.Z-release-unsigned.apk` (or signed release) and SHA-256 checksum. Allow installs from your browser or file manager if Android asks. |
+| F-Droid | *Coming soon.* |
 
-### Build Commands
+Requires Android 8.0 (API 26) or newer, and is built and tested for Android 16.
 
-Clone the repository:
+> [!NOTE]
+> **Switching between GitHub and F-Droid builds?** The two are signed with different keys, so Android will not update one over the other. Use **Settings → Data → Export** first, uninstall, install the other build, then **Import**.
+
+**Verify a download:**
+```bash
+sha256sum -c Reflex-vX.Y.Z.apk.sha256
+```
+
+### Permissions
+Reflex asks only for what a feature needs, and each is optional unless the feature is used.
+
+| Permission | Why |
+| :--- | :--- |
+| Notifications | Reminders, timer and session notifications |
+| Display over other apps | Priority task cards and the app-blocking screen |
+| Usage access | Detecting which app is open so app blocking can work |
+| Calendar (read and write) | Showing device calendar events and the optional device-calendar sync |
+| Foreground service | Keeping routine, focus and app-block timers alive in the background |
+| Full-screen intent | Priority task alerts on the lock screen |
+| Run at startup | Restoring reminders after a reboot |
+| Ignore battery optimization | Optional, for the most dependable reminders on aggressive devices |
+| Vibrate | Haptic cues |
+
+---
+
+## 🛠 Build from source
+
+You need JDK 17 or newer and the Android SDK (Android Studio is the easiest way to get both).
+
 ```bash
 git clone https://github.com/bobby-99/reflex.git
 cd reflex
+
+# debug build, installs on a connected device or emulator
+./gradlew installDebug
+
+# checks run by CI
+./gradlew lint testDebugUnitTest assembleDebug
 ```
 
-Build debug APK:
-```bash
-./gradlew assembleDebug
-```
+Release builds are signed only when signing details are provided through environment variables or a local, git-ignored `keystore.properties`. Without them you get an unsigned APK, so a fresh clone always builds. See [RELEASING.md](RELEASING.md) for the full process.
 
-Build unsigned release APK:
-```bash
-./gradlew assembleRelease
-```
+### Tech stack
 
-Run unit tests:
-```bash
-./gradlew testDebugUnitTest
-```
+| Area | What it uses |
+| :--- | :--- |
+| **Language and UI** | Kotlin, Jetpack Compose, Material 3 with custom Reflex tokens |
+| **Architecture** | MVVM with StateFlow and coroutines |
+| **Storage** | Room (SQLite) and DataStore, all on-device |
+| **Background work** | Foreground services, `AlarmManager.setAlarmClock()`, a boot receiver, a Quick Settings tile |
+| **System integration** | `UsageStatsManager`, window overlays, `CalendarContract` |
+| **Visual polish** | [Haze](https://github.com/chrisbanes/haze) frosted glass tab bar, bundled Lora, OpenMoji |
+| **Build** | Gradle Kotlin DSL, R8 minification and resource shrinking |
 
 ---
 
-## Tech Stack
+## 🎨 Design system
 
-- **Language**: [Kotlin](https://kotlinlang.org/) (100%)
-- **UI Toolkit**: [Jetpack Compose](https://developer.android.com/jetpack/compose) & Material 3
-- **Architecture**: MVVM with Unidirectional Data Flow (StateFlow / SharedFlow)
-- **Local Persistence**: [Room Database](https://developer.android.com/training/data-storage/room) & Jetpack DataStore Preferences
-- **Background Tasks**: [WorkManager](https://developer.android.com/topic/libraries/architecture/workmanager) & Exact `AlarmManager`
-- **Effects & UI**: [Haze](https://github.com/chrisbanes/haze) (frosted glass blurs), [OpenMoji](https://openmoji.org/) (visual icons)
-- **Typography**: [Lora](https://fonts.google.com/specimen/Lora) (SIL OFL 1.1)
+Reflex follows its own Design System v1.0, documented in [DESIGN.md](DESIGN.md).
 
----
+| Token | Dark | Light |
+| :--- | :--- | :--- |
+| **Background** | `#0A0908` | `#F7F3EE` |
+| **Accent (copper)** | `#D9A184` | `#8F4C2B` |
 
-## Contributing
-
-Contributions, bug reports, and feature requests are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) and our [Code of Conduct](CODE_OF_CONDUCT.md) before submitting pull requests.
-
-### Core Philosophy for Contributions
-1. **Zero Network / No Telemetry**: PRs introducing network dependencies, cloud trackers, or proprietary analytics will be rejected.
-2. **Design Integrity**: All UI elements must adhere to the Design System v1.0 specifications described in [DESIGN.md](DESIGN.md).
+Bundled Lora with tabular numerals, rounded surfaces (16dp and up), sentence case everywhere, and a minimum text size of 13sp. If you contribute UI, please follow it.
 
 ---
 
-## Security & Privacy
+## 🤝 Contributing
 
-Read our plain-language [Privacy Policy](PRIVACY.md) and [Security Policy](SECURITY.md).
-To report a security vulnerability or bug privately:
-- Contact: `reflexhelpdesk.unworried192@simplelogin.com`
-- Or open an issue on [GitHub Issues](https://github.com/bobby-99/reflex/issues/new/choose).
+Contributions, bug reports and ideas are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first. In short:
+- Keep it offline and tracker-free. No network permission, telemetry or proprietary dependencies.
+- Follow [DESIGN.md](DESIGN.md) for anything visual.
+- Run `./gradlew lint testDebugUnitTest` before opening a pull request.
 
-*Reflex is an independent, solo-maintained project. Inquiries and contributions will be reviewed on a best-effort basis.*
+Reflex is maintained by one person in spare time, so replies are best-effort. Please be kind and patient. See the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+### Feedback and bugs
+- Open an [issue on GitHub](https://github.com/bobby-99/reflex/issues/new/choose) (preferred), or
+- Use **Settings → Report bugs / feedback** in the app, or email [`reflexhelpdesk.unworried192@simplelogin.com`](mailto:reflexhelpdesk.unworried192@simplelogin.com)
+- Security problems: see [SECURITY.md](SECURITY.md) and please report privately.
 
 ---
 
-## License
+## 🙏 Acknowledgements
 
-Reflex is free software released under the terms of the **GNU General Public License v3.0 or later (GPL-3.0-or-later)**. See [LICENSE](LICENSE) for details.
+- [Lora](https://github.com/cyrealtype/Lora-Cyrillic) typeface, licensed under the SIL Open Font License 1.1
+- [OpenMoji](https://openmoji.org/) emoji by the OpenMoji project, licensed under CC BY-SA 4.0
+- [Haze](https://github.com/chrisbanes/haze) by Chris Banes, Apache License 2.0
+- The Android, Kotlin and Jetpack Compose teams and every open-source library listed under Settings → About → Open source licenses and in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)
 
-Third-party attributions and licenses are cataloged in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
+---
+
+## 📄 License
+
+Reflex is free software, released under the [GNU General Public License v3.0 or later (GPL-3.0-or-later)](LICENSE). You are free to use, study, share and modify it, and derivative works must stay open under the same license. It comes with no warranty.
+
+Copyright © 2026 the Reflex authors.
+
+<div align="center">
+  <sub>Made to help you start, focus and finish, without handing over your data.</sub>
+</div>
