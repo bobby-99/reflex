@@ -102,12 +102,12 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     implementation(libs.androidx.datastore.preferences)
-    implementation("dev.chrisbanes.haze:haze:1.5.3")
-    implementation("androidx.core:core-splashscreen:1.0.1")
-    implementation("androidx.work:work-runtime-ktx:2.9.1")
-    implementation("androidx.documentfile:documentfile:1.0.1")
+    implementation("dev.chrisbanes.haze:haze:2.0.1")
+    implementation("androidx.core:core-splashscreen:1.2.0")
+    implementation("androidx.work:work-runtime-ktx:2.12.0")
+    implementation("androidx.documentfile:documentfile:1.1.0")
 
     testImplementation(libs.junit)
-    testImplementation("org.json:json:20240303")
+    testImplementation("org.json:json:20260814")
     debugImplementation(libs.androidx.ui.tooling)
 }
