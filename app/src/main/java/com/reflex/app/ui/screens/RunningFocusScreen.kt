@@ -99,8 +99,10 @@ fun RunningFocusScreen(
 
     val state by viewModel.timerState.collectAsState()
     var completionHandled by remember { mutableStateOf(false) }
-    var showExitDialog by remember { mutableStateOf(false) }
+    var showUnderOneMinDialog by remember { mutableStateOf(false) }
     var sessionStarted by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+
+    val isDone = state?.isFinished == true
 
     LaunchedEffect(Unit) {
         if (!sessionStarted) {
@@ -115,9 +117,6 @@ fun RunningFocusScreen(
             }
         }
     }
-
-    var localIsDone by remember { mutableStateOf(false) }
-    val isDone = localIsDone || state?.isFinished == true
 
     LaunchedEffect(isDone) {
         if (isDone) {
@@ -147,8 +146,24 @@ fun RunningFocusScreen(
     val isTimedFlow = mode == FocusMode.FLOW_TIMED
     val isOpenFlow = mode == FocusMode.FLOW_OPEN
 
+    val serviceElapsedSec = state?.elapsedSeconds ?: 0
+
+    val handleManualEnd = {
+        val elapsed = serviceElapsedSec
+        if (elapsed < 60) {
+            showUnderOneMinDialog = true
+        } else {
+            if (!completionHandled) {
+                completionHandled = true
+                viewModel.stopSession(context, endReason = "stopped_early") { sessionId ->
+                    onCompleteSession(sessionId)
+                }
+            }
+        }
+    }
+
     androidx.activity.compose.BackHandler(enabled = !isDone) {
-        showExitDialog = true
+        handleManualEnd()
     }
 
     // Sub-frame monotonic clock tracking for ultra-smooth 60fps+ liquid draining
@@ -156,7 +171,6 @@ fun RunningFocusScreen(
     val currentElapsedMs = remember { mutableLongStateOf(0L) }
 
     val serviceRemainingSec = state?.remainingSeconds ?: (targetMin * 60)
-    val serviceElapsedSec = state?.elapsedSeconds ?: 0
 
     LaunchedEffect(serviceRemainingSec, isPaused, isWaiting, isDone) {
         if (isPaused || isWaiting || isDone) {
@@ -387,7 +401,7 @@ fun RunningFocusScreen(
                         .clickable {
                             if (!completionHandled) {
                                 completionHandled = true
-                                viewModel.stopSession(context) { sessionId ->
+                                viewModel.stopSession(context, endReason = "completed") { sessionId ->
                                     onCompleteSession(sessionId)
                                 }
                             } else {
@@ -418,7 +432,7 @@ fun RunningFocusScreen(
                             .height(ReflexTokens.FocusControlPillHeight)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.secondaryContainer)
-                            .clickable { showExitDialog = true },
+                            .clickable { handleManualEnd() },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -495,7 +509,7 @@ fun RunningFocusScreen(
                             .height(ReflexTokens.FocusControlPillHeight)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.secondaryContainer)
-                            .clickable { showExitDialog = true },
+                            .clickable { handleManualEnd() },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -539,7 +553,7 @@ fun RunningFocusScreen(
                             .height(ReflexTokens.FocusControlPillHeight)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.secondaryContainer)
-                            .clickable { showExitDialog = true },
+                            .clickable { handleManualEnd() },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -574,21 +588,53 @@ fun RunningFocusScreen(
         }
     }
 
-    if (showExitDialog) {
-        val dialogTitle = if (isOpenFlow) "Finish open flow session?" else "End focus session?"
-        DeleteConfirmationDialog(
-            taskTitle = dialogTitle,
-            onConfirm = {
-                showExitDialog = false
-                localIsDone = true
-                if (!completionHandled) {
-                    completionHandled = true
-                    viewModel.stopSession(context) { sessionId ->
-                        // Background persistence complete
-                    }
-                }
+    if (showUnderOneMinDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showUnderOneMinDialog = false },
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
+            title = {
+                Text(
+                    text = "Session under 1 minute",
+                    fontFamily = Lora,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             },
-            onDismiss = { showExitDialog = false }
+            text = {
+                Text(
+                    text = "This session has run for less than a minute. Would you like to save it to your records or discard it?",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            confirmButton = {
+                com.reflex.app.ui.components.ReflexButton(
+                    text = "Save",
+                    onClick = {
+                        showUnderOneMinDialog = false
+                        if (!completionHandled) {
+                            completionHandled = true
+                            viewModel.stopSession(context, endReason = "stopped_early") { sessionId ->
+                                onCompleteSession(sessionId)
+                            }
+                        }
+                    },
+                    variant = com.reflex.app.ui.components.ReflexButtonVariant.PRIMARY
+                )
+            },
+            dismissButton = {
+                com.reflex.app.ui.components.ReflexButton(
+                    text = "Discard",
+                    onClick = {
+                        showUnderOneMinDialog = false
+                        viewModel.discardCurrentSession(context)
+                        onCancel()
+                    },
+                    variant = com.reflex.app.ui.components.ReflexButtonVariant.DESTRUCTIVE
+                )
+            }
         )
     }
 

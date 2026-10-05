@@ -1,0 +1,6 @@
+• Enhanced habit tracking: custom frequencies, reminders, targets, and custom date/time pickers.
+• Refined focus end flow: manual stop saves actual focus time and goes directly to early summary.
+• System-wide alerts for High and Medium priority tasks across all apps.
+• Instant calendar reflection: real-time live sync and dual permissions.
+• Storage and database record counts update immediately on reset.
+• Deep notification navigation and onboarding keyboard fixes.

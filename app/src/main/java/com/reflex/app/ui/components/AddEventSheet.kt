@@ -67,6 +67,7 @@ import com.reflex.app.ui.theme.ReflexTokens
 import com.reflex.app.util.CalendarPreferenceRepository
 import com.reflex.app.util.CalendarProviderHelper
 import com.reflex.app.util.DeviceCalendar
+import com.reflex.app.util.DeviceCalendarEvent
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -84,7 +85,7 @@ import java.util.Locale
 fun AddEventSheet(
     initialDate: LocalDate = LocalDate.now(),
     onDismiss: () -> Unit,
-    onEventCreated: () -> Unit
+    onEventCreated: (DeviceCalendarEvent?) -> Unit = {}
 ) {
     val context = LocalContext.current
 
@@ -160,7 +161,18 @@ fun AddEventSheet(
                 calendarId = selectedCalendarId
             )
             if (eventId != null) {
-                onEventCreated()
+                val calName = availableCalendars.firstOrNull { it.id == selectedCalendarId }?.name ?: "Calendar"
+                val createdEvent = DeviceCalendarEvent(
+                    id = eventId,
+                    title = title.trim(),
+                    description = description.trim().ifEmpty { null },
+                    startMillis = startMillis,
+                    endMillis = endMillis,
+                    allDay = isAllDay,
+                    location = location.trim().ifEmpty { null },
+                    calendarName = calName
+                )
+                onEventCreated(createdEvent)
                 onDismiss()
             } else {
                 // Fallback to intent if provider insertion fails
@@ -173,6 +185,7 @@ fun AddEventSheet(
                     allDay = isAllDay,
                     location = location.trim().ifEmpty { null }
                 )
+                onEventCreated(null)
                 onDismiss()
             }
         } else {
@@ -186,6 +199,7 @@ fun AddEventSheet(
                 allDay = isAllDay,
                 location = location.trim().ifEmpty { null }
             )
+            onEventCreated(null)
             onDismiss()
         }
     }

@@ -316,4 +316,60 @@ class BackupImportTest {
         val s1 = importedSessionsArr.getJSONObject(1)
         assertTrue(!s1.has("tagName"))
     }
+
+    @Test
+    fun testV4HabitAndFocusSessionFieldsRoundTripAndV3BackwardsCompatibility() {
+        val v3Json = """
+        {
+          "version": 3,
+          "exportedAt": 1727705000000,
+          "habits": [
+            {
+              "id": 1,
+              "name": "Exercise",
+              "type": "CHECK_OFF",
+              "target": 1.0,
+              "unit": "",
+              "step": 1.0,
+              "startEpochDay": 19000,
+              "sortOrder": 0
+            }
+          ],
+          "focus_sessions": [
+            {
+              "id": 101,
+              "mode": "CLASSIC_POMODORO",
+              "startTime": 1727701000000,
+              "endTime": 1727702500000,
+              "actualDurationSeconds": 1500,
+              "completed": true
+            }
+          ]
+        }
+        """.trimIndent()
+        val root = JSONObject(v3Json)
+        val habitObj = root.getJSONArray("habits").getJSONObject(0)
+        val habit = com.reflex.app.data.Habit(
+            id = habitObj.optLong("id", 0L),
+            name = habitObj.getString("name"),
+            type = habitObj.optString("type", "CHECK_OFF"),
+            target = habitObj.optDouble("target", 1.0),
+            unit = habitObj.optString("unit", ""),
+            step = habitObj.optDouble("step", 1.0),
+            startEpochDay = habitObj.optLong("startEpochDay", 0L),
+            sortOrder = habitObj.optInt("sortOrder", 0),
+            frequencyType = habitObj.optString("frequencyType", "DAILY"),
+            frequencyDays = habitObj.optString("frequencyDays", ""),
+            frequencyTargetPerWeek = habitObj.optInt("frequencyTargetPerWeek", 0),
+            reminderEnabled = habitObj.optBoolean("reminderEnabled", false),
+            reminderTimes = habitObj.optString("reminderTimes", "")
+        )
+        assertEquals("DAILY", habit.frequencyType)
+        assertEquals(false, habit.reminderEnabled)
+        assertEquals(0, habit.frequencyTargetPerWeek)
+
+        val sessionObj = root.getJSONArray("focus_sessions").getJSONObject(0)
+        val endReason = sessionObj.optString("endReason", if (sessionObj.optBoolean("completed", true)) "completed" else "stopped_early")
+        assertEquals("completed", endReason)
+    }
 }

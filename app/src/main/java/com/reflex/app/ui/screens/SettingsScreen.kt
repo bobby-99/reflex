@@ -179,12 +179,13 @@ fun SettingsScreen(
         }
     }
 
-    // Refresh permissions on resume
+    // Refresh permissions and storage stats on resume
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 SettingsRepository.refreshPermissions(context)
+                SettingsRepository.refreshStorageStats(context)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -195,6 +196,11 @@ fun SettingsScreen(
 
     // Back handling
     val currentScreenId = stack.lastOrNull() ?: "home"
+    LaunchedEffect(currentScreenId) {
+        if (currentScreenId == "data" || currentScreenId == "storage") {
+            SettingsRepository.refreshStorageStats(context)
+        }
+    }
     BackHandler(enabled = true) {
         if (stack.size > 1) {
             stack.removeAt(stack.lastIndex)
@@ -479,7 +485,7 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .background(colors.bg)
         ) {
-            // Centered max-width 430dp container
+            // Full-width adaptive container
             Box(
                 modifier = Modifier
                     .fillMaxSize(),
@@ -487,7 +493,6 @@ fun SettingsScreen(
             ) {
                 Column(
                     modifier = Modifier
-                        .widthIn(max = 430.dp)
                         .fillMaxSize()
                 ) {
                     // Pinned Top Bar (56dp height + status bar inset)
@@ -710,6 +715,7 @@ fun SettingsScreen(
                                         db.withTransaction {
                                             app.repository.wipeAllData()
                                         }
+                                        SettingsRepository.resetStorageStats(context)
                                         showToast("All data wiped cleanly")
                                     }
                                 },
@@ -1396,7 +1402,7 @@ private fun SettingsHomeScreenContent(
                 SettingsNavigationRow(
                     icon = "info",
                     title = "About Reflex",
-                    summary = "Version ${com.reflex.app.BuildConfig.VERSION_NAME} (${com.reflex.app.BuildConfig.VERSION_CODE}) · works offline",
+                    summary = "Version ${com.reflex.app.BuildConfig.VERSION_NAME} · works offline",
                     onClick = { onOpenScreen("about") }
                 )
             }
@@ -1987,7 +1993,10 @@ private fun SettingsGenericSubScreenContent(
                                         text = dynamicValue,
                                         fontFamily = Lora,
                                         fontSize = 14.sp,
-                                        color = colors.secondary
+                                        color = colors.secondary,
+                                        maxLines = 1,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                        modifier = Modifier.widthIn(max = 140.dp)
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -2003,7 +2012,7 @@ private fun SettingsGenericSubScreenContent(
                             val displayVal = when (item.key) {
                                 "storage" -> storageStats?.formattedStorageSize ?: SettingsRepository.getDeviceStorageSize(context)
                                 "db_stats" -> storageStats?.formattedRecordSummary ?: "Calculating..."
-                                "version" -> "${com.reflex.app.BuildConfig.VERSION_NAME} (${com.reflex.app.BuildConfig.VERSION_CODE})"
+                                "version" -> com.reflex.app.BuildConfig.VERSION_NAME
                                 "last_backup" -> {
                                     val lastTime = SettingsRepository.getLastBackupTime(context)
                                     val lastStatus = SettingsRepository.getLastBackupStatus(context)
@@ -2034,11 +2043,14 @@ private fun SettingsGenericSubScreenContent(
                                     color = colors.ink,
                                     modifier = Modifier.weight(1f)
                                 )
+                                Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = displayVal,
                                     fontFamily = Lora,
                                     fontSize = 14.sp,
-                                    color = colors.secondary
+                                    color = colors.secondary,
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                 )
                             }
                         }

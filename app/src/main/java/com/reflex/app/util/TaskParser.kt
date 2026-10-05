@@ -27,7 +27,7 @@ data class ParsedTaskInput(
 
 object TaskParser {
 
-    fun parse(input: String): ParsedTaskInput {
+    fun parse(input: String, clock: java.time.Clock = java.time.Clock.systemDefaultZone()): ParsedTaskInput {
         val trimmed = input.trim()
         if (trimmed.isEmpty()) {
             return ParsedTaskInput(title = "")
@@ -45,7 +45,8 @@ object TaskParser {
         var detectedRecurrenceDaysOfWeek: String? = null
         var detectedRecurrenceMonthlyMode = MonthlyMode.SAME_DATE
 
-        val now = LocalDateTime.now()
+        val zone = clock.zone
+        val now = LocalDateTime.now(clock)
         val today = now.toLocalDate()
 
         val weekdaysLookup = mapOf(
@@ -215,24 +216,29 @@ object TaskParser {
         }
 
         // 1. Priority Parsing
+        // Use boundary-aware matches so "!!!" inside a word (e.g. foo!!!bar or file!name) is not extracted as priority
+        val highPrioExcl = Regex("""(?<=\s|^)!{3}(?=\s|$)|(?<=[a-zA-Z0-9])!{3}(?=\s|$)""")
+        val medPrioExcl = Regex("""(?<=\s|^)!{2}(?=\s|$)|(?<=[a-zA-Z0-9])!{2}(?=\s|$)""")
+        val lowPrioExcl = Regex("""(?<=\s|^)!(?=\s|$)|(?<=[a-zA-Z0-9])!(?=\s|$)""")
+
         when {
-            workingText.contains("!!!") -> {
-                detectedPriority = Priority.HIGH
-                workingText = workingText.replace("!!!", " ")
+            highPrioExcl.containsMatchIn(workingText) -> {
+                detectedPriority = maxOfPriority(detectedPriority, Priority.HIGH)
+                workingText = workingText.replace(highPrioExcl, " ")
             }
-            workingText.contains("!!") -> {
-                detectedPriority = Priority.MEDIUM
-                workingText = workingText.replace("!!", " ")
+            medPrioExcl.containsMatchIn(workingText) -> {
+                detectedPriority = maxOfPriority(detectedPriority, Priority.MEDIUM)
+                workingText = workingText.replace(medPrioExcl, " ")
             }
-            workingText.contains("!") -> {
-                detectedPriority = Priority.LOW
-                workingText = workingText.replace("!", " ")
+            lowPrioExcl.containsMatchIn(workingText) -> {
+                detectedPriority = maxOfPriority(detectedPriority, Priority.LOW)
+                workingText = workingText.replace(lowPrioExcl, " ")
             }
         }
 
         var lowerText = workingText.lowercase(Locale.ROOT)
         if (lowerText.contains("urgent") || lowerText.contains("asap") || lowerText.contains("important") || lowerText.contains("top priority")) {
-            detectedPriority = Priority.HIGH
+            detectedPriority = maxOfPriority(detectedPriority, Priority.HIGH)
             workingText = replaceIgnoreCase(workingText, "urgent", " ")
             workingText = replaceIgnoreCase(workingText, "asap", " ")
             workingText = replaceIgnoreCase(workingText, "important", " ")
@@ -241,18 +247,20 @@ object TaskParser {
         }
 
         if (lowerText.contains("high priority") || lowerText.contains("priority high") || lowerText.contains("p1")) {
-            detectedPriority = Priority.HIGH
+            detectedPriority = maxOfPriority(detectedPriority, Priority.HIGH)
             workingText = replaceIgnoreCase(workingText, "high priority", " ")
             workingText = replaceIgnoreCase(workingText, "priority high", " ")
             workingText = replaceIgnoreCase(workingText, "p1", " ")
-        } else if (lowerText.contains("medium priority") || lowerText.contains("med priority") || lowerText.contains("priority medium") || lowerText.contains("p2")) {
-            detectedPriority = Priority.MEDIUM
+        }
+        if (lowerText.contains("medium priority") || lowerText.contains("med priority") || lowerText.contains("priority medium") || lowerText.contains("p2")) {
+            detectedPriority = maxOfPriority(detectedPriority, Priority.MEDIUM)
             workingText = replaceIgnoreCase(workingText, "medium priority", " ")
             workingText = replaceIgnoreCase(workingText, "med priority", " ")
             workingText = replaceIgnoreCase(workingText, "priority medium", " ")
             workingText = replaceIgnoreCase(workingText, "p2", " ")
-        } else if (lowerText.contains("low priority") || lowerText.contains("priority low") || lowerText.contains("p3")) {
-            detectedPriority = Priority.LOW
+        }
+        if (lowerText.contains("low priority") || lowerText.contains("priority low") || lowerText.contains("p3")) {
+            detectedPriority = maxOfPriority(detectedPriority, Priority.LOW)
             workingText = replaceIgnoreCase(workingText, "low priority", " ")
             workingText = replaceIgnoreCase(workingText, "priority low", " ")
             workingText = replaceIgnoreCase(workingText, "p3", " ")
@@ -436,24 +444,28 @@ object TaskParser {
 
             when (cleanToken) {
                 "today", "2day" -> {
-                    detectedDate = today
+                    if (detectedDate == null) detectedDate = today
                 }
                 "tomorrow", "tmrw", "tmr" -> {
-                    detectedDate = today.plusDays(1)
+                    if (detectedDate == null) detectedDate = today.plusDays(1)
                 }
                 "tonight" -> {
-                    detectedDate = today
+                    if (detectedDate == null) detectedDate = today
                     if (detectedTime == null) {
                         detectedTime = TimeDefaults.NIGHT
                     }
                 }
                 "yesterday" -> {
-                    detectedDate = today.minusDays(1)
-                    isPast = true
+                    if (detectedDate == null) {
+                        detectedDate = today.minusDays(1)
+                        isPast = true
+                    }
                 }
                 in weekdaysMap.keys -> {
-                    val dayOfWeek = weekdaysMap[cleanToken]!!
-                    detectedDate = getNextOrSameDayOfWeek(today, dayOfWeek)
+                    if (detectedDate == null) {
+                        val dayOfWeek = weekdaysMap[cleanToken]!!
+                        detectedDate = getNextOrSameDayOfWeek(today, dayOfWeek)
+                    }
                 }
                 in TaskParserLookup.TIME_WORDS.keys -> {
                     if (detectedTime == null) {
@@ -481,10 +493,10 @@ object TaskParser {
         val finalTitle = cleanedTitle.ifEmpty { trimmed }
 
         val effectiveDate = detectedDate ?: if (detectedTime != null) today else null
-        val dueDateMillis = effectiveDate?.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.toEpochMilli()
+        val dueDateMillis = effectiveDate?.atStartOfDay(zone)?.toInstant()?.toEpochMilli()
         val dueTimeMillis = if (detectedTime != null) {
             val dateToUse = effectiveDate ?: today
-            LocalDateTime.of(dateToUse, detectedTime).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            LocalDateTime.of(dateToUse, detectedTime).atZone(zone).toInstant().toEpochMilli()
         } else null
 
         return ParsedTaskInput(
@@ -580,5 +592,15 @@ object TaskParser {
 
     private fun replaceIgnoreCase(text: String, target: String, replacement: String): String {
         return text.replace(Regex("(?i)" + Regex.escape(target)), replacement)
+    }
+
+    private fun maxOfPriority(a: Priority, b: Priority): Priority {
+        fun rank(p: Priority): Int = when (p) {
+            Priority.HIGH -> 3
+            Priority.MEDIUM -> 2
+            Priority.LOW -> 1
+            Priority.NONE -> 0
+        }
+        return if (rank(a) >= rank(b)) a else b
     }
 }

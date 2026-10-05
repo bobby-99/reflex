@@ -10,7 +10,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [Routine::class, Step::class, CompletionLog::class, Task::class, FocusSettings::class, FocusSession::class, Habit::class, HabitLog::class, FocusTag::class, BlockedAppEvent::class],
-    version = 13,
+    version = 14,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -164,6 +164,21 @@ abstract class ReflexDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_13_14 = object : Migration(13, 14) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE focus_sessions ADD COLUMN endReason TEXT NOT NULL DEFAULT 'completed'")
+                db.execSQL("ALTER TABLE habits ADD COLUMN frequencyType TEXT NOT NULL DEFAULT 'DAILY'")
+                db.execSQL("ALTER TABLE habits ADD COLUMN frequencyDays TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE habits ADD COLUMN frequencyTargetPerWeek INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE habits ADD COLUMN reminderEnabled INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE habits ADD COLUMN reminderTimes TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE habits ADD COLUMN endEpochDay INTEGER DEFAULT NULL")
+                db.execSQL("ALTER TABLE habits ADD COLUMN colorHex TEXT DEFAULT NULL")
+                db.execSQL("ALTER TABLE habits ADD COLUMN iconKey TEXT DEFAULT NULL")
+                db.execSQL("ALTER TABLE habits ADD COLUMN notes TEXT DEFAULT NULL")
+            }
+        }
+
         @Volatile
         private var INSTANCE: ReflexDatabase? = null
 
@@ -174,7 +189,7 @@ abstract class ReflexDatabase : RoomDatabase() {
                     ReflexDatabase::class.java,
                     "reflex_database"
                 )
-                .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
+                .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
                 .fallbackToDestructiveMigration()
                 .build()
                 INSTANCE = instance

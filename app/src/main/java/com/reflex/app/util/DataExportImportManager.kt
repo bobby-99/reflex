@@ -33,7 +33,7 @@ import java.io.File
 
 object DataExportImportManager {
 
-    private const val BACKUP_VERSION = 3
+    private const val BACKUP_VERSION = 4
 
     suspend fun exportDataToUri(context: Context, repository: ReflexRepository, uri: Uri): Boolean = withContext(Dispatchers.IO) {
         try {
@@ -257,6 +257,7 @@ object DataExportImportManager {
                 put("blockedAttemptCount", fs.blockedAttemptCount)
                 put("sessionTitle", fs.sessionTitle)
                 put("checklistJson", fs.checklistJson)
+                put("endReason", fs.endReason)
                 if (fs.tagId != null && tagIdToNameMap.containsKey(fs.tagId)) {
                     put("tagName", tagIdToNameMap[fs.tagId])
                 }
@@ -278,6 +279,15 @@ object DataExportImportManager {
                 put("step", h.step)
                 put("startEpochDay", h.startEpochDay)
                 put("sortOrder", h.sortOrder)
+                put("frequencyType", h.frequencyType)
+                put("frequencyDays", h.frequencyDays)
+                put("frequencyTargetPerWeek", h.frequencyTargetPerWeek)
+                put("reminderEnabled", h.reminderEnabled)
+                put("reminderTimes", h.reminderTimes)
+                if (h.endEpochDay != null) put("endEpochDay", h.endEpochDay)
+                if (h.colorHex != null) put("colorHex", h.colorHex)
+                if (h.iconKey != null) put("iconKey", h.iconKey)
+                if (h.notes != null) put("notes", h.notes)
             }
             habitsArray.put(obj)
         }
@@ -552,7 +562,8 @@ object DataExportImportManager {
                             completed = obj.optBoolean("completed", true),
                             blockedAttemptCount = obj.optInt("blockedAttemptCount", 0),
                             sessionTitle = if (obj.has("sessionTitle") && !obj.isNull("sessionTitle")) obj.getString("sessionTitle") else null,
-                            checklistJson = if (obj.has("checklistJson") && !obj.isNull("checklistJson")) obj.getString("checklistJson") else null
+                            checklistJson = if (obj.has("checklistJson") && !obj.isNull("checklistJson")) obj.getString("checklistJson") else null,
+                            endReason = obj.optString("endReason", if (obj.optBoolean("completed", true)) "completed" else "stopped_early")
                         ),
                         tagName
                     )
@@ -577,7 +588,16 @@ object DataExportImportManager {
                         unit = obj.optString("unit", ""),
                         step = obj.optDouble("step", 1.0),
                         startEpochDay = obj.optLong("startEpochDay", java.time.LocalDate.now().toEpochDay()),
-                        sortOrder = obj.optInt("sortOrder", 0)
+                        sortOrder = obj.optInt("sortOrder", 0),
+                        frequencyType = obj.optString("frequencyType", "DAILY"),
+                        frequencyDays = obj.optString("frequencyDays", ""),
+                        frequencyTargetPerWeek = obj.optInt("frequencyTargetPerWeek", 0),
+                        reminderEnabled = obj.optBoolean("reminderEnabled", false),
+                        reminderTimes = obj.optString("reminderTimes", ""),
+                        endEpochDay = if (obj.has("endEpochDay") && !obj.isNull("endEpochDay")) obj.getLong("endEpochDay") else null,
+                        colorHex = if (obj.has("colorHex") && !obj.isNull("colorHex")) obj.getString("colorHex") else null,
+                        iconKey = if (obj.has("iconKey") && !obj.isNull("iconKey")) obj.getString("iconKey") else null,
+                        notes = if (obj.has("notes") && !obj.isNull("notes")) obj.getString("notes") else null
                     )
                 )
             }

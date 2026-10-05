@@ -37,11 +37,25 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
+import android.os.Build
+import androidx.compose.material.icons.filled.Alarm
+import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.QueryStats
+import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -127,6 +141,7 @@ fun HabitsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val scope = rememberCoroutineScope()
     val density = LocalContext.current.resources.displayMetrics.density
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.checkDateRefresh()
@@ -289,14 +304,25 @@ fun HabitsScreen(
                 showAddHabitSheet = false
                 habitToEdit = null
             },
-            onSave = { name, kind, target, unit, step ->
+            onSave = { name, kind, target, unit, step, freqType, freqDays, freqTargetPerWeek, reminderEnabled, reminderTimes, startDay, endDay, colorHex, iconKey, notes ->
                 viewModel.saveHabit(
                     name = name,
                     kind = kind,
                     target = target,
                     unit = unit,
                     step = step,
-                    existingId = habitToEdit?.id ?: 0L
+                    frequencyType = freqType,
+                    frequencyDays = freqDays,
+                    frequencyTargetPerWeek = freqTargetPerWeek,
+                    reminderEnabled = reminderEnabled,
+                    reminderTimes = reminderTimes,
+                    startEpochDay = startDay,
+                    endEpochDay = endDay,
+                    colorHex = colorHex,
+                    iconKey = iconKey,
+                    notes = notes,
+                    existingId = habitToEdit?.id ?: 0L,
+                    context = context
                 )
                 showAddHabitSheet = false
                 habitToEdit = null
@@ -329,7 +355,7 @@ fun HabitsScreen(
                 ReflexButton(
                     text = "Delete",
                     onClick = {
-                        viewModel.deleteHabit(habit)
+                        viewModel.deleteHabit(habit, context)
                         habitToDelete = null
                     },
                     variant = ReflexButtonVariant.DESTRUCTIVE
@@ -2244,8 +2270,25 @@ fun ManageHabitsSheet(
 fun AddEditHabitSheet(
     initialHabit: Habit?,
     onDismiss: () -> Unit,
-    onSave: (name: String, kind: HabitKind, target: Double, unit: String, step: Double) -> Unit
+    onSave: (
+        name: String,
+        kind: HabitKind,
+        target: Double,
+        unit: String,
+        step: Double,
+        frequencyType: String,
+        frequencyDays: String,
+        frequencyTargetPerWeek: Int,
+        reminderEnabled: Boolean,
+        reminderTimes: String,
+        startEpochDay: Long,
+        endEpochDay: Long?,
+        colorHex: String?,
+        iconKey: String?,
+        notes: String?
+    ) -> Unit
 ) {
+    val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     var name by remember { mutableStateOf(initialHabit?.name ?: "") }
@@ -2253,6 +2296,71 @@ fun AddEditHabitSheet(
     var targetText by remember { mutableStateOf(if (initialHabit != null && initialHabit.habitKind != HabitKind.CHECK_OFF) formatValue(initialHabit.target) else "1") }
     var unit by remember { mutableStateOf(initialHabit?.unit ?: "") }
     var stepText by remember { mutableStateOf(if (initialHabit != null && initialHabit.habitKind != HabitKind.CHECK_OFF) formatValue(initialHabit.step) else "1") }
+
+    // Advanced section state
+    var isAdvancedExpanded by remember { mutableStateOf(false) }
+
+    // Frequency state
+    var frequencyType by remember { mutableStateOf(initialHabit?.frequencyType ?: "DAILY") }
+    val allWeekdays = listOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY")
+    val weekdayLabels = listOf("M", "T", "W", "T", "F", "S", "S")
+    var selectedDays by remember {
+        mutableStateOf(
+            if (!initialHabit?.frequencyDays.isNullOrBlank()) {
+                initialHabit!!.frequencyDays.split(",").map { it.trim().uppercase() }.toSet()
+            } else {
+                allWeekdays.toSet()
+            }
+        )
+    }
+    var targetPerWeek by remember {
+        mutableIntStateOf(if (initialHabit != null && initialHabit.frequencyTargetPerWeek > 0) initialHabit.frequencyTargetPerWeek else 3)
+    }
+
+    // Reminders state
+    val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+        onResult = { _ -> }
+    )
+    var reminderEnabled by remember { mutableStateOf(initialHabit?.reminderEnabled ?: false) }
+    var reminderTimeList by remember {
+        mutableStateOf(
+            if (!initialHabit?.reminderTimes.isNullOrBlank()) {
+                initialHabit!!.reminderTimes.split(",").map { it.trim() }.filter { it.isNotBlank() }
+            } else {
+                listOf("09:00")
+            }
+        )
+    }
+
+    // Dates state
+    var startEpochDay by remember { mutableLongStateOf(initialHabit?.startEpochDay ?: java.time.LocalDate.now().toEpochDay()) }
+    var endEpochDay by remember { mutableStateOf(initialHabit?.endEpochDay) }
+
+    // Custom Reflex picker modal states
+    var showReflexDatePickerForStart by remember { mutableStateOf(false) }
+    var showReflexDatePickerForEnd by remember { mutableStateOf(false) }
+    var editingReminderIndex by remember { mutableStateOf<Int?>(null) }
+    var showReflexTimePickerForAdd by remember { mutableStateOf(false) }
+
+    // Style state
+    val colorPalette = listOf("#D9A184", "#8EAF9D", "#D97757", "#64748B", "#EAB308", "#A855F7")
+    var selectedColorHex by remember { mutableStateOf(initialHabit?.colorHex ?: "#D9A184") }
+
+    val iconOptions = listOf(
+        "check" to Icons.Default.Check,
+        "book" to Icons.Default.MenuBook,
+        "fitness" to Icons.Default.FitnessCenter,
+        "water" to Icons.Default.WaterDrop,
+        "timer" to Icons.Default.Timer,
+        "bed" to Icons.Default.Bedtime,
+        "self_care" to Icons.Default.SelfImprovement,
+        "code" to Icons.Default.Code
+    )
+    var selectedIconKey by remember { mutableStateOf(initialHabit?.iconKey ?: "check") }
+
+    // Notes state
+    var notes by remember { mutableStateOf(initialHabit?.notes ?: "") }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -2381,6 +2489,461 @@ fun AddEditHabitSheet(
                 )
             }
 
+            // ── ADVANCED / EXPANDABLE SECTION ──
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(ReflexTokens.ShapeCard)
+                    .clickable { isAdvancedExpanded = !isAdvancedExpanded },
+                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                shape = ReflexTokens.ShapeCard
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Advanced options",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = if (isAdvancedExpanded) "Tap to collapse" else "Frequency, reminders, schedule, style & notes",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Icon(
+                        imageVector = if (isAdvancedExpanded) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            if (isAdvancedExpanded) {
+                // 1. Frequency
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Frequency",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        HabitTypePill(
+                            label = "Daily",
+                            isSelected = frequencyType == "DAILY",
+                            onClick = { frequencyType = "DAILY" },
+                            modifier = Modifier.weight(1f)
+                        )
+                        HabitTypePill(
+                            label = "Specific days",
+                            isSelected = frequencyType == "SPECIFIC_DAYS",
+                            onClick = { frequencyType = "SPECIFIC_DAYS" },
+                            modifier = Modifier.weight(1.2f)
+                        )
+                        HabitTypePill(
+                            label = "X / week",
+                            isSelected = frequencyType == "TIMES_PER_WEEK",
+                            onClick = { frequencyType = "TIMES_PER_WEEK" },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    if (frequencyType == "SPECIFIC_DAYS") {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            allWeekdays.forEachIndexed { idx, dayKey ->
+                                val isDaySelected = selectedDays.contains(dayKey)
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .clip(CircleShape)
+                                        .background(if (isDaySelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer)
+                                        .border(
+                                            BorderStroke(
+                                                1.5.dp,
+                                                if (isDaySelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                                            ),
+                                            CircleShape
+                                        )
+                                        .clickable {
+                                            selectedDays = if (isDaySelected) {
+                                                if (selectedDays.size > 1) selectedDays - dayKey else selectedDays
+                                            } else {
+                                                selectedDays + dayKey
+                                            }
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = weekdayLabels[idx],
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isDaySelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                        }
+                    } else if (frequencyType == "TIMES_PER_WEEK") {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            (1..7).forEach { times ->
+                                val isSel = targetPerWeek == times
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(36.dp)
+                                        .clip(CircleShape)
+                                        .background(if (isSel) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer)
+                                        .border(
+                                            BorderStroke(
+                                                1.dp,
+                                                if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                                            ),
+                                            CircleShape
+                                        )
+                                        .clickable { targetPerWeek = times },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "${times}x",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 2. Reminders
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Alarm,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Reminders",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        Switch(
+                            checked = reminderEnabled,
+                            onCheckedChange = { isChecked ->
+                                reminderEnabled = isChecked
+                                if (isChecked && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    if (androidx.core.content.ContextCompat.checkSelfPermission(
+                                            context,
+                                            android.Manifest.permission.POST_NOTIFICATIONS
+                                        ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+                                    ) {
+                                        permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                                    }
+                                }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = MaterialTheme.colorScheme.primary,
+                                checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+                            )
+                        )
+                    }
+
+                    if (reminderEnabled) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            reminderTimeList.forEachIndexed { idx, timeStr ->
+                                val parts = timeStr.split(":")
+                                val h = parts.getOrNull(0)?.toIntOrNull() ?: 9
+                                val m = parts.getOrNull(1)?.toIntOrNull() ?: 0
+
+                                Surface(
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.secondaryContainer,
+                                    border = BorderStroke(ReflexTokens.BorderHairline, MaterialTheme.colorScheme.outlineVariant),
+                                    modifier = Modifier.clickable {
+                                        editingReminderIndex = idx
+                                    }
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = timeStr,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        if (reminderTimeList.size > 1) {
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = "Remove time",
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier
+                                                    .size(16.dp)
+                                                    .clickable {
+                                                        reminderTimeList = reminderTimeList.filterIndexed { i, _ -> i != idx }
+                                                    }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (reminderTimeList.size < 4) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.surfaceVariant,
+                                    modifier = Modifier.clickable {
+                                        showReflexTimePickerForAdd = true
+                                    }
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Add,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "Add time",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 3. Start & End Dates
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Schedule",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        // Start Date Tile
+                        val startLocal = java.time.LocalDate.ofEpochDay(startEpochDay)
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(ReflexTokens.ShapeCard)
+                                .clickable {
+                                    showReflexDatePickerForStart = true
+                                },
+                            shape = ReflexTokens.ShapeCard,
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            border = BorderStroke(ReflexTokens.BorderHairline, MaterialTheme.colorScheme.outlineVariant)
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = "Start date",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = startLocal.format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy")),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+
+                        // End Date Tile
+                        val endLocal = endEpochDay?.let { java.time.LocalDate.ofEpochDay(it) }
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(ReflexTokens.ShapeCard)
+                                .clickable {
+                                    showReflexDatePickerForEnd = true
+                                },
+                            shape = ReflexTokens.ShapeCard,
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            border = BorderStroke(ReflexTokens.BorderHairline, MaterialTheme.colorScheme.outlineVariant)
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "End date",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    if (endEpochDay != null) {
+                                        Text(
+                                            text = "Clear",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.error,
+                                            modifier = Modifier.clickable { endEpochDay = null }
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = endLocal?.format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy")) ?: "No end date",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (endEpochDay != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // 4. Color & Icon
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Color & Icon",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    // Color row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        colorPalette.forEach { hex ->
+                            val color = androidx.compose.ui.graphics.Color(android.graphics.Color.parseColor(hex))
+                            val isSel = selectedColorHex.equals(hex, ignoreCase = true)
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(color)
+                                    .clickable { selectedColorHex = hex }
+                                    .then(
+                                        if (isSel) Modifier.border(2.5.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
+                                        else Modifier
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (isSel) {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = null,
+                                        tint = if (hex == "#D9A184" || hex == "#EAB308") androidx.compose.ui.graphics.Color.Black else androidx.compose.ui.graphics.Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Icon row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        iconOptions.forEach { (key, vector) ->
+                            val isSel = selectedIconKey == key
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(CircleShape)
+                                    .background(if (isSel) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer)
+                                    .border(
+                                        BorderStroke(
+                                            1.dp,
+                                            if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                                        ),
+                                        CircleShape
+                                    )
+                                    .clickable { selectedIconKey = key },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = vector,
+                                    contentDescription = null,
+                                    tint = if (isSel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // 5. Notes / Description
+                OutlinedTextField(
+                    value = notes,
+                    onValueChange = { notes = it },
+                    label = { Text("Notes / Description") },
+                    placeholder = { Text("Add tips, motivation, or rules for this habit...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2,
+                    maxLines = 4,
+                    shape = ReflexTokens.ShapeInput,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    )
+                )
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
 
             ReflexButton(
@@ -2389,13 +2952,84 @@ fun AddEditHabitSheet(
                     if (name.isNotBlank()) {
                         val targetVal = targetText.toDoubleOrNull() ?: 1.0
                         val stepVal = stepText.toDoubleOrNull() ?: 1.0
-                        onSave(name, kind, targetVal, unit, stepVal)
+                        val freqDaysStr = if (frequencyType == "SPECIFIC_DAYS") selectedDays.joinToString(",") else ""
+                        val reminderTimesStr = if (reminderEnabled) reminderTimeList.joinToString(",") else ""
+                        onSave(
+                            name,
+                            kind,
+                            targetVal,
+                            unit,
+                            stepVal,
+                            frequencyType,
+                            freqDaysStr,
+                            targetPerWeek,
+                            reminderEnabled,
+                            reminderTimesStr,
+                            startEpochDay,
+                            endEpochDay,
+                            selectedColorHex,
+                            selectedIconKey,
+                            notes
+                        )
                     }
                 },
                 variant = ReflexButtonVariant.PRIMARY,
                 modifier = Modifier.fillMaxWidth()
             )
         }
+    }
+
+    if (showReflexDatePickerForStart) {
+        com.reflex.app.ui.components.ReflexDatePickerModal(
+            initialDate = java.time.LocalDate.ofEpochDay(startEpochDay),
+            title = "Select start date",
+            onDismiss = { showReflexDatePickerForStart = false },
+            onDateSelected = { selectedDate ->
+                startEpochDay = selectedDate.toEpochDay()
+                showReflexDatePickerForStart = false
+            }
+        )
+    }
+
+    if (showReflexDatePickerForEnd) {
+        val initEnd = endEpochDay?.let { java.time.LocalDate.ofEpochDay(it) } ?: java.time.LocalDate.now().plusMonths(1)
+        com.reflex.app.ui.components.ReflexDatePickerModal(
+            initialDate = initEnd,
+            title = "Select end date",
+            onDismiss = { showReflexDatePickerForEnd = false },
+            onDateSelected = { selectedDate ->
+                endEpochDay = selectedDate.toEpochDay()
+                showReflexDatePickerForEnd = false
+            }
+        )
+    }
+
+    if (editingReminderIndex != null) {
+        val idx = editingReminderIndex!!
+        val currentVal = reminderTimeList.getOrNull(idx) ?: "09:00"
+        com.reflex.app.ui.components.ReflexTimePickerModal(
+            initialTime = currentVal,
+            title = "Edit reminder time",
+            onDismiss = { editingReminderIndex = null },
+            onTimeSelected = { newTime ->
+                reminderTimeList = reminderTimeList.mapIndexed { i, t -> if (i == idx) newTime else t }
+                editingReminderIndex = null
+            }
+        )
+    }
+
+    if (showReflexTimePickerForAdd) {
+        com.reflex.app.ui.components.ReflexTimePickerModal(
+            initialTime = "12:00",
+            title = "Add reminder time",
+            onDismiss = { showReflexTimePickerForAdd = false },
+            onTimeSelected = { newTime ->
+                if (!reminderTimeList.contains(newTime)) {
+                    reminderTimeList = reminderTimeList + newTime
+                }
+                showReflexTimePickerForAdd = false
+            }
+        )
     }
 }
 

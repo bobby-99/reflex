@@ -46,6 +46,12 @@ interface TaskDao {
     @Query("UPDATE tasks SET isCompleted = :isCompleted, completedAt = :completedAt WHERE id = :taskId")
     suspend fun setCompleted(taskId: Long, isCompleted: Boolean, completedAt: Long?)
 
+    @Query("UPDATE tasks SET isCompleted = 1, completedAt = :completedAt WHERE id = :taskId AND isCompleted = 0")
+    suspend fun markCompletedAtomic(taskId: Long, completedAt: Long): Int
+
+    @Query("UPDATE tasks SET isCompleted = 0, completedAt = NULL WHERE id = :taskId AND isCompleted = 1")
+    suspend fun markIncompleteAtomic(taskId: Long): Int
+
     @Query("DELETE FROM tasks WHERE isCompleted = 1")
     suspend fun deleteAllCompletedTasks()
 

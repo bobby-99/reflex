@@ -143,10 +143,21 @@ class HabitsViewModel(
     fun saveHabit(
         name: String,
         kind: HabitKind,
-        target: Double,
-        unit: String,
-        step: Double,
-        existingId: Long = 0L
+        target: Double = 1.0,
+        unit: String = "",
+        step: Double = 1.0,
+        frequencyType: String = "DAILY",
+        frequencyDays: String = "",
+        frequencyTargetPerWeek: Int = 0,
+        reminderEnabled: Boolean = false,
+        reminderTimes: String = "",
+        startEpochDay: Long? = null,
+        endEpochDay: Long? = null,
+        colorHex: String? = null,
+        iconKey: String? = null,
+        notes: String? = null,
+        existingId: Long = 0L,
+        context: android.content.Context? = null
     ) {
         viewModelScope.launch {
             val habits = uiState.value.habits
@@ -156,7 +167,7 @@ class HabitsViewModel(
                 habits.find { it.id == existingId }?.sortOrder ?: 0
             }
 
-            val startEpochDay = if (existingId == 0L) {
+            val finalStartEpochDay = startEpochDay ?: if (existingId == 0L) {
                 LocalDate.now().toEpochDay()
             } else {
                 habits.find { it.id == existingId }?.startEpochDay ?: LocalDate.now().toEpochDay()
@@ -169,10 +180,19 @@ class HabitsViewModel(
                 target = if (kind == HabitKind.CHECK_OFF) 1.0 else target,
                 unit = if (kind == HabitKind.CHECK_OFF) "" else unit.trim(),
                 step = if (kind == HabitKind.CHECK_OFF) 1.0 else (if (step <= 0.0) 1.0 else step),
-                startEpochDay = startEpochDay,
-                sortOrder = sortOrder
+                startEpochDay = finalStartEpochDay,
+                sortOrder = sortOrder,
+                frequencyType = frequencyType,
+                frequencyDays = frequencyDays,
+                frequencyTargetPerWeek = frequencyTargetPerWeek,
+                reminderEnabled = reminderEnabled,
+                reminderTimes = reminderTimes,
+                endEpochDay = endEpochDay,
+                colorHex = colorHex,
+                iconKey = iconKey,
+                notes = if (notes.isNullOrBlank()) null else notes.trim()
             )
-            repository.saveHabit(habit)
+            repository.saveHabit(habit, context)
         }
     }
 
@@ -185,9 +205,9 @@ class HabitsViewModel(
         }
     }
 
-    fun deleteHabit(habit: Habit) {
+    fun deleteHabit(habit: Habit, context: android.content.Context? = null) {
         viewModelScope.launch {
-            repository.deleteHabit(habit)
+            repository.deleteHabit(habit, context)
         }
     }
 

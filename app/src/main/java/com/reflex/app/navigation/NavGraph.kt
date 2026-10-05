@@ -196,10 +196,15 @@ fun ReflexNavGraph(navController: NavHostController) {
                 targetMin = targetMin,
                 onCompleteSession = { sessionId ->
                     navController.navigate(Screen.FocusSummary.createRoute(sessionId)) {
-                        popUpTo(Screen.FocusHome.route)
+                        popUpTo(Screen.FocusHome.route) { inclusive = false }
                     }
                 },
-                onCancel = { navController.popBackStack() }
+                onCancel = {
+                    val popped = navController.popBackStack(Screen.FocusHome.route, inclusive = false)
+                    if (!popped) {
+                        navController.navigate(Screen.FocusHome.route)
+                    }
+                }
             )
         }
 
@@ -211,7 +216,13 @@ fun ReflexNavGraph(navController: NavHostController) {
             FocusSummaryScreen(
                 sessionId = sessionId,
                 onDone = {
-                    navController.popBackStack(Screen.FocusHome.route, inclusive = false)
+                    com.reflex.app.service.FocusTimerService.clearActiveState()
+                    val popped = navController.popBackStack(Screen.FocusHome.route, inclusive = false)
+                    if (!popped) {
+                        navController.navigate(Screen.FocusHome.route) {
+                            popUpTo(Screen.FocusHome.route) { inclusive = true }
+                        }
+                    }
                 }
             )
         }

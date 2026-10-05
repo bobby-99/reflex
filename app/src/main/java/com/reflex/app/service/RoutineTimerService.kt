@@ -461,6 +461,7 @@ class RoutineTimerService : Service() {
 
         val appIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(com.reflex.app.util.NotificationHelper.EXTRA_NAVIGATE_TO, "routines")
             putExtra(com.reflex.app.util.NotificationHelper.EXTRA_START_ROUTINE_ID, state?.routineId ?: -1L)
         }
         val contentPendingIntent = PendingIntent.getActivity(

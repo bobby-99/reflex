@@ -50,3 +50,11 @@ desktop.ini
 .antigravity/
 .agent/
 .gemini/
+
+# Website build & dependencies
+website/node_modules/
+website/dist/
+
+# Archives
+*.zip
+

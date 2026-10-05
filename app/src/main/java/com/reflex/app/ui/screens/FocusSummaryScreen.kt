@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -72,6 +73,8 @@ fun FocusSummaryScreen(
     }
 
     var session by remember { mutableStateOf<FocusSession?>(null) }
+    var showDiscardConfirm by remember { mutableStateOf(false) }
+    val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
     val outlineColor = MaterialTheme.colorScheme.outline
 
     LaunchedEffect(sessionId) {
@@ -83,8 +86,8 @@ fun FocusSummaryScreen(
         }
     }
 
-    val isFlowMode = session?.mode == FocusMode.FLOW_OPEN || session?.mode == FocusMode.FLOW_TIMED
-    val isCompleted = session?.completed == true || isFlowMode || ((session?.actualDurationSeconds ?: 0) >= 10)
+    val isStoppedEarly = session?.endReason == "stopped_early" || (session?.completed == false && session?.endReason != "completed")
+    val isCompleted = !isStoppedEarly
     val modeText = when (session?.mode) {
         FocusMode.CLASSIC_POMODORO -> "Pomodoro"
         FocusMode.FLOW_TIMED -> "Timed flow"
@@ -96,6 +99,11 @@ fun FocusSummaryScreen(
     val mins = actualSec / 60
     val secs = actualSec % 60
     val formattedDuration = String.format("%02d:%02d", mins, secs)
+
+    val plannedSec = session?.plannedDurationSeconds
+    val plannedMins = if (plannedSec != null) plannedSec / 60 else 0
+    val plannedSecs = if (plannedSec != null) plannedSec % 60 else 0
+    val formattedPlanned = if (plannedSec != null) String.format("%02d:%02d", plannedMins, plannedSecs) else null
 
     Column(
         modifier = Modifier
@@ -156,8 +164,16 @@ fun FocusSummaryScreen(
 
                     Spacer(modifier = Modifier.height(4.dp))
 
+                    val subtitleText = if (isCompleted) {
+                        "Excellent work maintaining deliberate focus."
+                    } else if (formattedPlanned != null && plannedSec != null && plannedSec > 0) {
+                        "Focused $formattedDuration of planned $formattedPlanned. Every minute of focus counts."
+                    } else {
+                        "Every minute of focus counts toward momentum."
+                    }
+
                     Text(
-                        text = if (isCompleted) "Excellent work maintaining deliberate focus." else "Every minute of focus counts toward momentum.",
+                        text = subtitleText,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -173,10 +189,19 @@ fun FocusSummaryScreen(
             ) {
                 StatTile(
                     value = formattedDuration,
-                    label = "Focused time",
+                    label = if (formattedPlanned != null) "Actual ($formattedDuration)" else "Focused time",
                     icon = Icons.Default.Timer,
                     modifier = Modifier.weight(1f)
                 )
+
+                if (formattedPlanned != null) {
+                    StatTile(
+                        value = formattedPlanned,
+                        label = "Planned time",
+                        icon = Icons.Default.HourglassBottom,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
 
                 StatTile(
                     value = modeText,
@@ -198,13 +223,68 @@ fun FocusSummaryScreen(
             Spacer(modifier = Modifier.height(ReflexTokens.SpaceXxl))
 
             ReflexButton(
-                text = "Return to focus",
+                text = "Back to focus",
                 onClick = onDone,
                 modifier = Modifier.fillMaxWidth(),
                 variant = ReflexButtonVariant.PRIMARY
             )
 
+            Spacer(modifier = Modifier.height(ReflexTokens.SpaceSm))
+
+            ReflexButton(
+                text = "Discard session",
+                onClick = { showDiscardConfirm = true },
+                modifier = Modifier.fillMaxWidth(),
+                variant = ReflexButtonVariant.SECONDARY
+            )
+
             Spacer(modifier = Modifier.height(40.dp))
         }
+    }
+
+    if (showDiscardConfirm) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showDiscardConfirm = false },
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
+            title = {
+                Text(
+                    text = "Discard this session?",
+                    fontFamily = com.reflex.app.ui.theme.Lora,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            text = {
+                Text(
+                    text = "This session will be removed and will not be counted in your focus stats.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            confirmButton = {
+                ReflexButton(
+                    text = "Discard",
+                    onClick = {
+                        showDiscardConfirm = false
+                        coroutineScope.launch {
+                            if (sessionId != 0L) {
+                                repository.deleteFocusSession(sessionId)
+                            }
+                            onDone()
+                        }
+                    },
+                    variant = ReflexButtonVariant.DESTRUCTIVE
+                )
+            },
+            dismissButton = {
+                ReflexButton(
+                    text = "Cancel",
+                    onClick = { showDiscardConfirm = false },
+                    variant = ReflexButtonVariant.SECONDARY
+                )
+            }
+        )
     }
 }

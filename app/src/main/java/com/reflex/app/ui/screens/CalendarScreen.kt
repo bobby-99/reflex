@@ -1,6 +1,12 @@
 package com.reflex.app.ui.screens
 
 import android.Manifest
+import android.database.ContentObserver
+import android.net.Uri
+import android.os.Handler
+import android.os.Looper
+import android.provider.CalendarContract
+import androidx.compose.runtime.DisposableEffect
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -8,6 +14,9 @@ import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
@@ -166,19 +175,76 @@ fun CalendarScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     // Banner visibility
-    var showPermissionBanner by remember { mutableStateOf(!state.hasCalendarPermission) }
+    var userDismissedPermissionBanner by remember { mutableStateOf(false) }
+    val showPermissionBanner = !state.hasCalendarPermission && !userDismissedPermissionBanner
 
     val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        viewModel.checkAndLoadCalendarPermission(context)
-        if (isGranted) {
-            showPermissionBanner = false
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val readGranted = permissions[Manifest.permission.READ_CALENDAR] == true
+        val writeGranted = permissions[Manifest.permission.WRITE_CALENDAR] == true
+        if (readGranted || writeGranted) {
+            viewModel.checkAndLoadCalendarPermission(context, force = true)
+            android.widget.Toast.makeText(context, "Calendar permission accepted", android.widget.Toast.LENGTH_SHORT).show()
+        } else {
+            viewModel.checkAndLoadCalendarPermission(context, force = true)
+            android.widget.Toast.makeText(context, "Calendar permission denied", android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 
+    val calSharedPrefs = remember { context.getSharedPreferences("reflex_calendar_prefs", android.content.Context.MODE_PRIVATE) }
     LaunchedEffect(Unit) {
-        viewModel.checkAndLoadCalendarPermission(context)
+        viewModel.checkAndLoadCalendarPermission(context, force = true)
+        val hasPromptedFirstTime = calSharedPrefs.getBoolean("has_prompted_calendar_first_time", false)
+        val hasPerm = com.reflex.app.util.CalendarProviderHelper.hasReadPermission(context)
+        if (!hasPerm && !hasPromptedFirstTime) {
+            calSharedPrefs.edit().putBoolean("has_prompted_calendar_first_time", true).apply()
+            android.widget.Toast.makeText(context, "Please allow calendar permission to view events", android.widget.Toast.LENGTH_SHORT).show()
+            permissionLauncher.launch(arrayOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR))
+        }
+    }
+
+    // Refresh calendar on app resume (e.g. if user granted permission in Settings or returned from event creation)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.checkAndLoadCalendarPermission(context, force = true)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    // Live ContentObserver on CalendarContract to immediately reflect device calendar changes
+    DisposableEffect(state.hasCalendarPermission) {
+        if (!state.hasCalendarPermission) {
+            onDispose { }
+        } else {
+            val contentResolver = context.contentResolver
+            val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
+                override fun onChange(selfChange: Boolean, uri: Uri?) {
+                    super.onChange(selfChange, uri)
+                    viewModel.loadDeviceCalendarEvents(context, force = true)
+                }
+            }
+            try {
+                contentResolver.registerContentObserver(
+                    CalendarContract.Events.CONTENT_URI,
+                    true,
+                    observer
+                )
+            } catch (e: Exception) {
+                com.reflex.app.util.AppLog.w("CalendarScreen", "Could not register calendar ContentObserver", e)
+            }
+            onDispose {
+                try {
+                    contentResolver.unregisterContentObserver(observer)
+                } catch (_: Exception) {}
+            }
+        }
     }
 
     // Scroll state & Programmatic feedback-loop guard
@@ -426,7 +492,7 @@ fun CalendarScreen(
                                 fontWeight = FontWeight.SemiBold,
                                 color = CopperPrimary,
                                 modifier = Modifier.clickable {
-                                    permissionLauncher.launch(Manifest.permission.READ_CALENDAR)
+                                    permissionLauncher.launch(arrayOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR))
                                 }
                             )
                         }
@@ -437,7 +503,7 @@ fun CalendarScreen(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier
                                 .size(18.dp)
-                                .clickable { showPermissionBanner = false }
+                                .clickable { userDismissedPermissionBanner = true }
                         )
                     }
                 }
@@ -664,9 +730,10 @@ fun CalendarScreen(
         AddEventSheet(
             initialDate = addEventInitialDate,
             onDismiss = { isAddEventOpen = false },
-            onEventCreated = {
+            onEventCreated = { createdEvent ->
+                createdEvent?.let { viewModel.addOrUpdateNativeEvent(it) }
                 viewModel.loadDeviceCalendarEvents(context, force = true)
-                viewModel.checkAndLoadCalendarPermission(context)
+                viewModel.checkAndLoadCalendarPermission(context, force = true)
             }
         )
     }

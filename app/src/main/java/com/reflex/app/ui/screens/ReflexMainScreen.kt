@@ -38,7 +38,11 @@ import dev.chrisbanes.haze.hazeSource
 
 @Composable
 fun ReflexMainScreen(
+    initialNavigateTo: String? = null,
+    initialTaskId: Long = -1L,
+    initialHabitId: Long = -1L,
     initialRoutineId: Long = -1L,
+    onInitialHandled: (() -> Unit)? = null,
     onInitialRoutineHandled: (() -> Unit)? = null,
     navController: NavHostController = rememberNavController()
 ) {
@@ -47,12 +51,54 @@ fun ReflexMainScreen(
     val activeTimerState by com.reflex.app.service.RoutineTimerService.timerState.collectAsState()
     val activeFocusState by com.reflex.app.service.FocusTimerService.timerState.collectAsState()
 
-    androidx.compose.runtime.LaunchedEffect(initialRoutineId) {
+    var pendingTaskIdToOpen by rememberSaveable { mutableStateOf<Long?>(null) }
+
+    androidx.compose.runtime.LaunchedEffect(initialNavigateTo, initialTaskId, initialHabitId, initialRoutineId) {
         if (initialRoutineId != -1L) {
             navController.navigate(Screen.RunningTimer.createRoute(initialRoutineId)) {
                 popUpTo(Screen.RoutineList.route)
             }
+            onInitialHandled?.invoke()
             onInitialRoutineHandled?.invoke()
+        } else if (initialNavigateTo == "habits" || initialHabitId != -1L) {
+            if (currentRoute != Screen.Habits.route) {
+                navController.navigate(Screen.Habits.route) {
+                    popUpTo(Screen.RoutineList.route) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
+            onInitialHandled?.invoke()
+        } else if (initialNavigateTo == "tasks" || initialTaskId != -1L) {
+            if (currentRoute != Screen.Tasks.route) {
+                navController.navigate(Screen.Tasks.route) {
+                    popUpTo(Screen.RoutineList.route) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
+            if (initialTaskId != -1L) {
+                pendingTaskIdToOpen = initialTaskId
+            }
+            onInitialHandled?.invoke()
+        } else if (initialNavigateTo == "routines") {
+            if (currentRoute != Screen.RoutineList.route) {
+                navController.navigate(Screen.RoutineList.route) {
+                    popUpTo(Screen.RoutineList.route) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
+            onInitialHandled?.invoke()
+        } else if (initialNavigateTo == "focus") {
+            if (currentRoute != Screen.FocusHome.route) {
+                navController.navigate(Screen.FocusHome.route) {
+                    popUpTo(Screen.RoutineList.route) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
+            onInitialHandled?.invoke()
         }
     }
 
@@ -95,6 +141,15 @@ fun ReflexMainScreen(
     val allTasks by app.repository.getAllTasks().collectAsState(initial = emptyList())
     var dismissedPriorityTaskIds by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(setOf<Long>()) }
     var taskToEditFromAlert by remember { androidx.compose.runtime.mutableStateOf<com.reflex.app.data.Task?>(null) }
+
+    androidx.compose.runtime.LaunchedEffect(allTasks, pendingTaskIdToOpen) {
+        val targetId = pendingTaskIdToOpen ?: return@LaunchedEffect
+        val foundTask = allTasks.firstOrNull { it.id == targetId }
+        if (foundTask != null) {
+            taskToEditFromAlert = foundTask
+            pendingTaskIdToOpen = null
+        }
+    }
 
     val pendingPriorityTask = remember(allTasks, dismissedPriorityTaskIds) {
         val now = System.currentTimeMillis()

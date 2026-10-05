@@ -47,6 +47,9 @@ interface FocusSessionDao {
     @Query("SELECT * FROM focus_sessions WHERE id = :sessionId LIMIT 1")
     suspend fun getSessionById(sessionId: Long): FocusSession?
 
+    @Query("DELETE FROM focus_sessions WHERE id = :sessionId")
+    suspend fun deleteSessionById(sessionId: Long): Int
+
     @Query("DELETE FROM focus_sessions")
     suspend fun deleteAllSessions()
 }

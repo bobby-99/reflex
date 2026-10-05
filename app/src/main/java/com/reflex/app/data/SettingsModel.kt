@@ -694,8 +694,8 @@ object SettingsSchema {
                             type = SettingItemType.LN,
                             key = "feedback",
                             label = "Send feedback / report bugs",
-                            description = "Request features or report issues directly",
-                            value = com.reflex.app.util.AppConstants.FEEDBACK_EMAIL
+                            description = com.reflex.app.util.AppConstants.FEEDBACK_EMAIL,
+                            value = ""
                         ),
                         SettingItem(
                             type = SettingItemType.LN,
@@ -712,7 +712,7 @@ object SettingsSchema {
                             type = SettingItemType.IN,
                             key = "version",
                             label = "Version",
-                            value = "${com.reflex.app.BuildConfig.VERSION_NAME} (${com.reflex.app.BuildConfig.VERSION_CODE})"
+                            value = com.reflex.app.BuildConfig.VERSION_NAME
                         ),
                         SettingItem(
                             type = SettingItemType.IN,

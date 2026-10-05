@@ -33,6 +33,10 @@ class ReflexRepository(
         return focusSessionDao?.insertSession(session) ?: 0L
     }
 
+    suspend fun deleteFocusSession(sessionId: Long): Int {
+        return focusSessionDao?.deleteSessionById(sessionId) ?: 0
+    }
+
     fun getAllFocusSessions(): Flow<List<FocusSession>> =
         focusSessionDao?.getAllSessions() ?: kotlinx.coroutines.flow.flowOf(emptyList())
 
@@ -190,26 +194,31 @@ class ReflexRepository(
     }
 
     suspend fun toggleTaskCompleted(task: Task, context: Context? = null) {
-        val newCompleted = !task.isCompleted
-        val completedAt = if (newCompleted) System.currentTimeMillis() else null
-        taskDao.setCompleted(task.id, newCompleted, completedAt)
+        val currentTask = taskDao.getTaskByIdSync(task.id) ?: task
+        val willComplete = !currentTask.isCompleted
 
-        if (newCompleted) {
-            if (context != null) {
-                AlarmScheduler.cancelTaskReminder(context, task.id)
-            }
+        if (willComplete) {
+            val completedAt = System.currentTimeMillis()
+            val rowsUpdated = taskDao.markCompletedAtomic(task.id, completedAt)
+            if (rowsUpdated > 0) {
+                if (context != null) {
+                    AlarmScheduler.cancelTaskReminder(context, task.id)
+                }
 
-            // Automatic next occurrence generation and alarm scheduling for repeating tasks
-            if (task.recurrenceFrequency != RecurrenceFrequency.NONE) {
-                val nextOccurrence = RecurrenceCalculator.computeNextOccurrence(task)
-                if (nextOccurrence != null) {
-                    val nextId = taskDao.insertTask(nextOccurrence)
-                    val nextTaskWithId = nextOccurrence.copy(id = nextId)
-                    if (context != null && nextTaskWithId.reminderTime != null && nextTaskWithId.reminderTime > System.currentTimeMillis()) {
-                        AlarmScheduler.scheduleTaskReminder(context, nextTaskWithId)
+                // Automatic next occurrence generation and alarm scheduling for repeating tasks
+                if (task.recurrenceFrequency != RecurrenceFrequency.NONE) {
+                    val nextOccurrence = RecurrenceCalculator.computeNextOccurrence(task)
+                    if (nextOccurrence != null) {
+                        val nextId = taskDao.insertTask(nextOccurrence)
+                        val nextTaskWithId = nextOccurrence.copy(id = nextId)
+                        if (context != null && nextTaskWithId.reminderTime != null && nextTaskWithId.reminderTime > System.currentTimeMillis()) {
+                            AlarmScheduler.scheduleTaskReminder(context, nextTaskWithId)
+                        }
                     }
                 }
             }
+        } else {
+            taskDao.markIncompleteAtomic(task.id)
         }
     }
 
@@ -221,7 +230,10 @@ class ReflexRepository(
         habitDao?.deleteAllLogs()
     }
 
-    suspend fun wipeAllData() {
+    suspend fun wipeAllData(context: Context? = null) {
+        if (context != null) {
+            AlarmScheduler.cancelAllAlarms(context)
+        }
         completionLogDao.deleteAllLogs()
         focusSessionDao?.deleteAllSessions()
         focusTagDao?.deleteAllTags()
@@ -243,13 +255,21 @@ class ReflexRepository(
     suspend fun getHabitById(id: Long): Habit? =
         habitDao?.getHabitById(id)
 
-    suspend fun saveHabit(habit: Habit): Long {
-        return if (habit.id == 0L) {
+    suspend fun saveHabit(habit: Habit, context: Context? = null): Long {
+        val id = if (habit.id == 0L) {
             habitDao?.insertHabit(habit) ?: 0L
         } else {
             habitDao?.updateHabit(habit)
             habit.id
         }
+        if (context != null) {
+            if (habit.reminderEnabled) {
+                AlarmScheduler.scheduleHabitReminders(context, habit.copy(id = id))
+            } else {
+                AlarmScheduler.cancelHabitReminders(context, id)
+            }
+        }
+        return id
     }
 
     suspend fun insertHabits(habits: List<Habit>): List<Long> =
@@ -259,7 +279,10 @@ class ReflexRepository(
         habitDao?.updateHabits(habits)
     }
 
-    suspend fun deleteHabit(habit: Habit) {
+    suspend fun deleteHabit(habit: Habit, context: Context? = null) {
+        if (context != null) {
+            AlarmScheduler.cancelHabitReminders(context, habit.id)
+        }
         habitDao?.deleteLogsForHabit(habit.id)
         habitDao?.deleteHabit(habit)
     }

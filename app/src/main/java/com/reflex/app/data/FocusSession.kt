@@ -18,10 +18,11 @@ data class FocusSession(
     val endTime: Long,
     val plannedDurationSeconds: Int?, // null for FLOW_OPEN
     val actualDurationSeconds: Int,
-    val completedCycles: Int, // count of full work phases completed
+    val completedCycles: Int = 0, // count of full work phases completed
     val completed: Boolean, // true only if not abandoned early
     val blockedAttemptCount: Int = 0,
     val sessionTitle: String? = null,
     val checklistJson: String? = null,
-    val tagId: Long? = null
+    val tagId: Long? = null,
+    val endReason: String = "completed" // "completed" or "stopped_early"
 )

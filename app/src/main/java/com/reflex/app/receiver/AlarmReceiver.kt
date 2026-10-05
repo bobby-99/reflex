@@ -39,13 +39,31 @@ class AlarmReceiver : BroadcastReceiver() {
                                         AppLog.w(TAG, "Failed to acquire wake lock for priority alert", e)
                                     }
 
-                                    if (com.reflex.app.util.AppBlockPermissionHelper.hasOverlayPermission(context)) {
-                                        com.reflex.app.util.PriorityTaskOverlayManager.show(context, task)
-                                    }
+                                    com.reflex.app.util.PriorityTaskOverlayManager.show(context.applicationContext, task)
                                 }
                             }
                         } catch (e: Exception) {
                             AppLog.e(TAG, "Error handling task reminder alarm", e)
+                        } finally {
+                            pendingResult.finish()
+                        }
+                    }
+                }
+            }
+            ACTION_HABIT_REMINDER -> {
+                val habitId = intent.getLongExtra(EXTRA_HABIT_ID, -1L)
+                if (habitId != -1L) {
+                    val app = context.applicationContext as ReflexApplication
+                    val pendingResult = goAsync()
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val habit = app.repository.getHabitById(habitId)
+                            if (habit != null && habit.reminderEnabled) {
+                                NotificationHelper.showHabitReminderNotification(context, habit)
+                                com.reflex.app.util.AlarmScheduler.scheduleHabitReminders(context, habit)
+                            }
+                        } catch (e: Exception) {
+                            AppLog.e(TAG, "Error handling habit reminder alarm", e)
                         } finally {
                             pendingResult.finish()
                         }
@@ -81,10 +99,12 @@ class AlarmReceiver : BroadcastReceiver() {
     companion object {
         private const val TAG = "AlarmReceiver"
         const val ACTION_TASK_REMINDER = "com.reflex.productivity.ACTION_TASK_REMINDER"
+        const val ACTION_HABIT_REMINDER = "com.reflex.productivity.ACTION_HABIT_REMINDER"
         const val ACTION_ROUTINE_REMINDER = "com.reflex.productivity.ACTION_ROUTINE_REMINDER"
         const val ACTION_TEST_NOTIFICATION = "com.reflex.productivity.ACTION_TEST_NOTIFICATION"
         const val EXTRA_TASK_ID = "extra_task_id"
         const val EXTRA_TASK_TITLE = "extra_task_title"
+        const val EXTRA_HABIT_ID = "extra_habit_id"
         const val EXTRA_ROUTINE_ID = "extra_routine_id"
     }
 }

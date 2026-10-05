@@ -134,13 +134,13 @@ class RunningFocusViewModel(
         })
     }
 
-    fun stopSession(context: Context, onCompleteSession: (Long) -> Unit) {
+    fun stopSession(context: Context, endReason: String = "completed", onCompleteSession: (Long) -> Unit) {
         if (!sessionCompletionHandled.compareAndSet(false, true)) return
         val state = timerState.value
         val startTime = System.currentTimeMillis() - ((state?.elapsedSeconds ?: 0) * 1000L)
         val endTime = System.currentTimeMillis()
         val isFlowSession = state?.mode == FocusMode.FLOW_OPEN || state?.mode == FocusMode.FLOW_TIMED
-        val completed = (state?.isFinished == true) || isFlowSession || ((state?.elapsedSeconds ?: 0) >= 10)
+        val completed = if (endReason == "stopped_early") false else ((state?.isFinished == true) || isFlowSession || ((state?.elapsedSeconds ?: 0) >= 10))
 
         try {
             context.stopService(Intent(context, FocusTimerService::class.java))
@@ -163,7 +163,8 @@ class RunningFocusViewModel(
                     blockedAttemptCount = state.blockedAttemptCount,
                     sessionTitle = state.sessionTitle,
                     checklistJson = if (checklistJsonStr == "[]") null else checklistJsonStr,
-                    tagId = state.tagId
+                    tagId = state.tagId,
+                    endReason = endReason
                 )
                 val id = repository.saveFocusSession(session)
                 onCompleteSession(id)
@@ -171,6 +172,16 @@ class RunningFocusViewModel(
         } else {
             onCompleteSession(0L)
         }
+    }
+
+    fun discardCurrentSession(context: Context) {
+        if (!sessionCompletionHandled.compareAndSet(false, true)) return
+        try {
+            context.stopService(Intent(context, FocusTimerService::class.java))
+        } catch (e: Exception) {
+            AppLog.w("RunningFocusViewModel", "Failed to stop FocusTimerService cleanly", e)
+        }
+        FocusTimerService.clearActiveState()
     }
 
     class Factory(private val repository: ReflexRepository) : ViewModelProvider.Factory {

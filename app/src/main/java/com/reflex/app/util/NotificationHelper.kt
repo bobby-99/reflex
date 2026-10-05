@@ -97,7 +97,9 @@ object NotificationHelper {
 
     fun showTaskReminderNotification(context: Context, task: Task) {
         val appIntent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(EXTRA_NAVIGATE_TO, "tasks")
+            putExtra(EXTRA_TASK_ID, task.id)
         }
         val contentPendingIntent = PendingIntent.getActivity(
             context,
@@ -169,6 +171,7 @@ object NotificationHelper {
     fun showRoutineReminderNotification(context: Context, routine: com.reflex.app.data.Routine) {
         val appIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(EXTRA_NAVIGATE_TO, "routines")
             putExtra(EXTRA_START_ROUTINE_ID, routine.id)
         }
         val contentPendingIntent = PendingIntent.getActivity(
@@ -197,7 +200,9 @@ object NotificationHelper {
     }
 
     fun showTestNotification(context: Context) {
-        val appIntent = Intent(context, MainActivity::class.java)
+        val appIntent = Intent(context, MainActivity::class.java).apply {
+            putExtra(EXTRA_NAVIGATE_TO, "tasks")
+        }
         val pendingIntent = PendingIntent.getActivity(
             context,
             9999,
@@ -222,5 +227,39 @@ object NotificationHelper {
         }
     }
 
+    fun showHabitReminderNotification(context: Context, habit: com.reflex.app.data.Habit) {
+        val appIntent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(EXTRA_NAVIGATE_TO, "habits")
+            putExtra(EXTRA_HABIT_ID, habit.id)
+        }
+        val contentPendingIntent = PendingIntent.getActivity(
+            context,
+            (habit.id + 70000).toInt(),
+            appIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val builder = NotificationCompat.Builder(context, CHANNEL_HABIT_NUDGES)
+            .setSmallIcon(R.drawable.ic_stat_reflex)
+            .setColor(0xFFD9A184.toInt())
+            .setContentTitle("Habit reminder: ${habit.name}")
+            .setContentText(if (!habit.notes.isNullOrBlank()) habit.notes else "Time to make progress on your habit!")
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setAutoCancel(true)
+            .setContentIntent(contentPendingIntent)
+
+        val manager = NotificationManagerCompat.from(context)
+        try {
+            manager.notify((habit.id + 70000).toInt(), builder.build())
+        } catch (e: SecurityException) {
+            AppLog.w("NotificationHelper", "Notification permission not granted for habit reminder", e)
+        }
+    }
+
     const val EXTRA_START_ROUTINE_ID = "extra_start_routine_id"
+    const val EXTRA_NAVIGATE_TO = "extra_navigate_to"
+    const val EXTRA_TASK_ID = "extra_task_id"
+    const val EXTRA_HABIT_ID = "extra_habit_id"
 }

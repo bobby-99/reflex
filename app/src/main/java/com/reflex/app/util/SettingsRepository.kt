@@ -386,9 +386,30 @@ object SettingsRepository {
         }
     }
 
+    fun resetStorageStats(context: Context) {
+        val dbPath = context.getDatabasePath("reflex.db")
+        var totalBytes = 0L
+        if (dbPath.exists()) totalBytes += dbPath.length()
+        val formatted = android.text.format.Formatter.formatShortFileSize(context, totalBytes.coerceAtLeast(1024L))
+        _storageStats.value = AppStorageStats(
+            formattedStorageSize = formatted,
+            databaseSizeBytes = totalBytes,
+            routineCount = 0,
+            taskCount = 0,
+            habitCount = 0,
+            focusSessionCount = 0
+        )
+        refreshStorageStats(context)
+    }
+
     fun refreshStorageStats(context: Context) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                val db = com.reflex.app.data.ReflexDatabase.getDatabase(context)
+                try {
+                    db.openHelper.writableDatabase.query("PRAGMA wal_checkpoint(FULL)").close()
+                } catch (_: Exception) {}
+
                 val dbPath = context.getDatabasePath("reflex.db")
                 var totalBytes = 0L
                 if (dbPath.exists()) totalBytes += dbPath.length()
@@ -402,7 +423,6 @@ object SettingsRepository {
 
                 val formatted = android.text.format.Formatter.formatShortFileSize(context, totalBytes.coerceAtLeast(1024L))
 
-                val db = com.reflex.app.data.ReflexDatabase.getDatabase(context)
                 val routines = try { db.routineDao().getAllRoutines().first().size } catch (_: Exception) { 0 }
                 val tasks = try { db.taskDao().getAllTasks().first().size } catch (_: Exception) { 0 }
                 val habits = try { db.habitDao().getAllHabits().first().size } catch (_: Exception) { 0 }

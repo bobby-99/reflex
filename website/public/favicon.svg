@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="15" fill="#0A0908" />
+  <clipPath id="favClip">
+    <circle cx="32" cy="32" r="17" />
+  </clipPath>
+  <g clip-path="url(#favClip)">
+    <path d="M 14 32 Q 23 25, 32 33 T 50 31 L 50 50 L 14 50 Z" fill="#D9A184" />
+  </g>
+  <circle cx="32" cy="32" r="18" fill="none" stroke="#D9A184" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="98 20" stroke-dashoffset="-5" />
+  <circle cx="45" cy="22" r="3.2" fill="#D9A184" />
+</svg>

@@ -108,7 +108,7 @@ fun PriorityTaskAlertCard(
     val isHigh = task.priority == Priority.HIGH
     val accentColor = if (isHigh) MaterialTheme.colorScheme.error else CopperPrimary
     val badgeBg = if (isHigh) DestructiveContainer else CopperSubtle
-    val badgeText = if (isHigh) "High priority alert" else "Priority reminder"
+    val badgeText = if (isHigh) "High priority alert" else "Medium priority alert"
 
     var selectedSnooze by remember { mutableStateOf(SnoozeOption.TEN_MIN) }
 

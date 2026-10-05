@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bobby-99.github.io/reflex/sitemap.xml

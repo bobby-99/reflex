@@ -88,10 +88,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
@@ -100,6 +104,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -115,6 +120,8 @@ import com.reflex.app.ui.theme.actionPill
 import com.reflex.app.ui.theme.elevatedSurface
 import com.reflex.app.ui.theme.onActionPill
 import com.reflex.app.ui.theme.tertiaryText
+import com.reflex.app.util.TaskHighlightHelper
+import com.reflex.app.util.TaskHighlightVisualTransformation
 import com.reflex.app.util.TaskParser
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -616,6 +623,11 @@ fun QuickAddCard(
                         } else {
                             MaterialTheme.colorScheme.outline
                         }
+                        val highlightPillColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+                        val highlightRanges by remember(state.text) {
+                            derivedStateOf { TaskHighlightHelper.findHighlightRanges(state.text) }
+                        }
+                        var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
 
                         Row(
                             modifier = Modifier
@@ -638,10 +650,60 @@ fun QuickAddCard(
                                 BasicTextField(
                                     value = state.text,
                                     onValueChange = { state.text = it },
+                                    onTextLayout = { textLayoutResult = it },
+                                    visualTransformation = remember {
+                                        TaskHighlightVisualTransformation(
+                                            textColor = Color.Unspecified,
+                                            highlightColor = Color.Transparent,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .focusRequester(state.focusRequester)
-                                        .onFocusChanged { isInputFocused = it.isFocused },
+                                        .onFocusChanged { isInputFocused = it.isFocused }
+                                        .drawBehind {
+                                            textLayoutResult?.let { layout ->
+                                                if (state.text.isNotEmpty()) {
+                                                    val textLen = state.text.length
+                                                    for (range in highlightRanges) {
+                                                        val s = range.first.coerceIn(0, textLen)
+                                                        val e = (range.last + 1).coerceIn(0, textLen)
+                                                        if (s < e && s < layout.layoutInput.text.length && e <= layout.layoutInput.text.length) {
+                                                            val startLine = layout.getLineForOffset(s)
+                                                            val endLine = layout.getLineForOffset((e - 1).coerceAtLeast(s))
+                                                            for (line in startLine..endLine) {
+                                                                val lineStart = layout.getLineStart(line)
+                                                                val lineEnd = layout.getLineEnd(line)
+                                                                val segStart = maxOf(s, lineStart)
+                                                                val segEnd = minOf(e, lineEnd)
+                                                                if (segStart < segEnd) {
+                                                                    val left = layout.getHorizontalPosition(segStart, true)
+                                                                    val right = layout.getHorizontalPosition(segEnd, true)
+                                                                    val top = layout.getLineTop(line)
+                                                                    val bottom = layout.getLineBottom(line)
+                                                                    val minX = minOf(left, right)
+                                                                    val maxX = maxOf(left, right)
+                                                                    if (maxX > minX) {
+                                                                        val hPad = 3.dp.toPx()
+                                                                        val vPad = 1.dp.toPx()
+                                                                        drawRoundRect(
+                                                                            color = highlightPillColor,
+                                                                            topLeft = Offset(minX - hPad, top + vPad),
+                                                                            size = Size(
+                                                                                (maxX - minX) + (hPad * 2),
+                                                                                (bottom - top) - (vPad * 2)
+                                                                            ),
+                                                                            cornerRadius = CornerRadius(5.dp.toPx(), 5.dp.toPx())
+                                                                        )
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
                                     textStyle = MaterialTheme.typography.bodyLarge.copy(
                                         fontSize = 16.sp,
                                         color = MaterialTheme.colorScheme.onSurface

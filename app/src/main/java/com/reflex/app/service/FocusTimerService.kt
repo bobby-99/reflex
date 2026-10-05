@@ -17,6 +17,7 @@ import androidx.core.app.NotificationCompat
 import com.reflex.app.MainActivity
 import com.reflex.app.data.FocusMode
 import com.reflex.app.data.FocusSettings
+import com.reflex.app.util.AppLog
 import com.reflex.app.util.FocusTickPlayer
 import com.reflex.app.util.NotificationHelper
 import com.reflex.app.util.SettingsRepository
@@ -54,7 +55,8 @@ data class FocusTimerState(
     val blockedAttemptCount: Int = 0,
     val sessionTitle: String? = null,
     val checklist: List<com.reflex.app.data.FocusChecklistItem> = emptyList(),
-    val tagId: Long? = null
+    val tagId: Long? = null,
+    val startTime: Long = System.currentTimeMillis()
 )
 
 class FocusTimerService : Service() {
@@ -108,8 +110,78 @@ class FocusTimerService : Service() {
             _timerState.value = state.copy(blockedAttemptCount = state.blockedAttemptCount + 1)
         }
 
-        fun clearActiveState() {
+        fun clearActiveState(context: Context? = null) {
             _timerState.value = null
+            if (context != null) {
+                clearSnapshot(context)
+            }
+        }
+
+        fun persistActiveSnapshot(context: Context, state: FocusTimerState) {
+            try {
+                val prefs = context.getSharedPreferences("reflex_focus_session_state", Context.MODE_PRIVATE)
+                prefs.edit()
+                    .putString("mode", state.mode.name)
+                    .putLong("startTime", state.startTime)
+                    .putLong("lastTick", System.currentTimeMillis())
+                    .putInt("elapsedSeconds", state.elapsedSeconds)
+                    .putInt("plannedDurationSeconds", state.plannedDurationSeconds ?: 0)
+                    .putInt("currentCycle", state.currentCycle)
+                    .putInt("blockedAttemptCount", state.blockedAttemptCount)
+                    .putString("sessionTitle", state.sessionTitle)
+                    .putString("checklistJson", com.reflex.app.data.FocusChecklistItem.toJsonArrayString(state.checklist))
+                    .putLong("tagId", state.tagId ?: -1L)
+                    .apply()
+            } catch (_: Exception) {}
+        }
+
+        fun clearSnapshot(context: Context) {
+            try {
+                val prefs = context.getSharedPreferences("reflex_focus_session_state", Context.MODE_PRIVATE)
+                prefs.edit().clear().apply()
+            } catch (_: Exception) {}
+        }
+
+        suspend fun recoverInterruptedSession(context: Context, repository: com.reflex.app.data.ReflexRepository) {
+            try {
+                val prefs = context.getSharedPreferences("reflex_focus_session_state", Context.MODE_PRIVATE)
+                val modeStr = prefs.getString("mode", null) ?: return
+                val elapsed = prefs.getInt("elapsedSeconds", 0)
+                val startTime = prefs.getLong("startTime", 0L)
+                val lastTick = prefs.getLong("lastTick", System.currentTimeMillis())
+                val plannedDuration = prefs.getInt("plannedDurationSeconds", 0)
+                val cycle = prefs.getInt("currentCycle", 0)
+                val blockedAttempts = prefs.getInt("blockedAttemptCount", 0)
+                val title = prefs.getString("sessionTitle", null)
+                val checklistJson = prefs.getString("checklistJson", null)
+                val rawTagId = prefs.getLong("tagId", -1L)
+                val tagId = if (rawTagId > 0L) rawTagId else null
+
+                // Clear snapshot
+                prefs.edit().clear().apply()
+
+                // Only save if elapsed time >= 60 seconds (under-1-minute rule)
+                if (elapsed >= 60) {
+                    val mode = try { FocusMode.valueOf(modeStr) } catch (_: Exception) { FocusMode.FLOW_OPEN }
+                    val session = com.reflex.app.data.FocusSession(
+                        mode = mode,
+                        startTime = if (startTime > 0) startTime else (lastTick - elapsed * 1000L),
+                        endTime = lastTick,
+                        plannedDurationSeconds = if (plannedDuration > 0) plannedDuration else null,
+                        actualDurationSeconds = elapsed,
+                        completedCycles = cycle,
+                        completed = false,
+                        blockedAttemptCount = blockedAttempts,
+                        sessionTitle = title,
+                        checklistJson = if (checklistJson == "[]") null else checklistJson,
+                        tagId = tagId,
+                        endReason = "stopped_early"
+                    )
+                    repository.saveFocusSession(session)
+                }
+            } catch (e: Exception) {
+                AppLog.w("FocusTimerService", "Failed to recover interrupted focus session", e)
+            }
         }
     }
 
@@ -365,6 +437,9 @@ class FocusTimerService : Service() {
                 }
 
                 updateNotification()
+                if (newElapsed % 3 == 0) {
+                    _timerState.value?.let { persistActiveSnapshot(this@FocusTimerService, it) }
+                }
             }
         }
     }
@@ -488,6 +563,7 @@ class FocusTimerService : Service() {
         tickPlayer?.stop()
         tickerJob?.cancel()
         _timerState.value = null
+        clearSnapshot(this@FocusTimerService)
         stopAppBlockMonitor()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(STOP_FOREGROUND_REMOVE)
@@ -586,6 +662,7 @@ class FocusTimerService : Service() {
 
         val appIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(com.reflex.app.util.NotificationHelper.EXTRA_NAVIGATE_TO, "focus")
             putExtra("extra_open_focus_running", true)
         }
         val contentPendingIntent = PendingIntent.getActivity(

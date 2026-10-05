@@ -277,7 +277,7 @@ class CalendarViewModel(
         }
     )
 
-    fun checkAndLoadCalendarPermission(context: Context) {
+    fun checkAndLoadCalendarPermission(context: Context, force: Boolean = true) {
         _appContext = context.applicationContext
         val is24 = android.text.format.DateFormat.is24HourFormat(context)
         _is24Hour.value = is24
@@ -285,14 +285,30 @@ class CalendarViewModel(
         val hasPerm = CalendarProviderHelper.hasReadPermission(context)
         _hasPermission.value = hasPerm
         if (hasPerm) {
-            loadDeviceCalendarEvents(context)
+            loadDeviceCalendarEvents(context, force = force)
+        } else {
+            _nativeEvents.value = emptyList()
         }
+    }
+
+    fun addOrUpdateNativeEvent(event: DeviceCalendarEvent) {
+        val currentList = _nativeEvents.value.toMutableList()
+        val index = currentList.indexOfFirst { it.id == event.id }
+        if (index >= 0) {
+            currentList[index] = event
+        } else {
+            currentList.add(event)
+        }
+        _nativeEvents.value = currentList
     }
 
     fun loadDeviceCalendarEvents(context: Context? = null, force: Boolean = false) {
         val ctx = context?.applicationContext ?: _appContext ?: return
         _appContext = ctx
-        if (!CalendarProviderHelper.hasReadPermission(ctx)) return
+        if (!CalendarProviderHelper.hasReadPermission(ctx)) {
+            _nativeEvents.value = emptyList()
+            return
+        }
 
         val prefs = CalendarPreferenceRepository.preferences.value
         val today = LocalDate.now()

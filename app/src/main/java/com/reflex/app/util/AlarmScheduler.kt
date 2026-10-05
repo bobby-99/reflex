@@ -171,6 +171,99 @@ object AlarmScheduler {
         return candidate.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 
+    fun scheduleHabitReminders(context: Context, habit: com.reflex.app.data.Habit) {
+        if (!habit.reminderEnabled || habit.reminderTimes.isBlank()) {
+            cancelHabitReminders(context, habit.id)
+            return
+        }
+
+        val times = habit.reminderTimes.split(",").map { it.trim() }.filter { it.isNotBlank() }
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        times.forEachIndexed { index, timeStr ->
+            val (hour, minute) = try {
+                val parts = timeStr.split(":")
+                Pair(parts[0].toInt(), parts[1].toInt())
+            } catch (e: Exception) {
+                return@forEachIndexed
+            }
+
+            val nextTriggerTime = getNextHabitTriggerMillis(habit, hour, minute) ?: return@forEachIndexed
+
+            val intent = Intent(context, AlarmReceiver::class.java).apply {
+                action = AlarmReceiver.ACTION_HABIT_REMINDER
+                putExtra(AlarmReceiver.EXTRA_HABIT_ID, habit.id)
+            }
+
+            val requestCode = (habit.id * 100 + index + 70000).toInt()
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                requestCode,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    val alarmClockInfo = AlarmManager.AlarmClockInfo(nextTriggerTime, pendingIntent)
+                    alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
+                } else {
+                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, nextTriggerTime, pendingIntent)
+                }
+            } catch (e: Exception) {
+                AppLog.w("AlarmScheduler", "Failed to set exact habit reminder, falling back to inexact", e)
+                alarmManager.set(AlarmManager.RTC_WAKEUP, nextTriggerTime, pendingIntent)
+            }
+        }
+    }
+
+    fun cancelHabitReminders(context: Context, habitId: Long) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, AlarmReceiver::class.java).apply {
+            action = AlarmReceiver.ACTION_HABIT_REMINDER
+        }
+        for (index in 0 until 10) {
+            val requestCode = (habitId * 100 + index + 70000).toInt()
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                requestCode,
+                intent,
+                PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+            )
+            if (pendingIntent != null) {
+                alarmManager.cancel(pendingIntent)
+                pendingIntent.cancel()
+            }
+        }
+    }
+
+    fun getNextHabitTriggerMillis(habit: com.reflex.app.data.Habit, hour: Int, minute: Int): Long? {
+        val now = java.time.LocalDateTime.now()
+        var candidate = now.withHour(hour).withMinute(minute).withSecond(0).withNano(0)
+
+        when (habit.frequencyType) {
+            "SPECIFIC_DAYS" -> {
+                val daysSet = habit.frequencyDays.split(",")
+                    .mapNotNull { dayStr ->
+                        try { java.time.DayOfWeek.valueOf(dayStr.trim().uppercase()) } catch (_: Exception) { null }
+                    }.toSet()
+                if (daysSet.isEmpty()) return null
+                if (candidate.isBefore(now) || !daysSet.contains(candidate.dayOfWeek)) {
+                    do {
+                        candidate = candidate.plusDays(1)
+                    } while (!daysSet.contains(candidate.dayOfWeek))
+                }
+            }
+            else -> {
+                if (candidate.isBefore(now)) {
+                    candidate = candidate.plusDays(1)
+                }
+            }
+        }
+
+        return candidate.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+    }
+
     suspend fun rescheduleAllAlarms(context: Context) {
         val db = ReflexDatabase.getDatabase(context)
         val incompleteTasks = db.taskDao().getIncompleteTasks().first()
@@ -186,6 +279,11 @@ object AlarmScheduler {
         routines.filter { it.reminderEnabled && !it.isArchived }.forEach { routine ->
             scheduleRoutineReminder(context, routine)
         }
+
+        val habits = db.habitDao().getAllHabitsSync()
+        habits.filter { it.reminderEnabled }.forEach { habit ->
+            scheduleHabitReminders(context, habit)
+        }
     }
 
     suspend fun cancelAllAlarms(context: Context) {
@@ -197,6 +295,10 @@ object AlarmScheduler {
         val routines = db.routineDao().getAllRoutines().first()
         routines.forEach { routine ->
             cancelRoutineReminder(context, routine.id)
+        }
+        val habits = db.habitDao().getAllHabitsSync()
+        habits.forEach { habit ->
+            cancelHabitReminders(context, habit.id)
         }
     }
 }

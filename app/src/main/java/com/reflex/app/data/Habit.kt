@@ -47,7 +47,16 @@ data class Habit(
     val unit: String = "",
     val step: Double = 1.0,
     val startEpochDay: Long,
-    val sortOrder: Int = 0
+    val sortOrder: Int = 0,
+    val frequencyType: String = "DAILY", // "DAILY", "SPECIFIC_DAYS", "TIMES_PER_WEEK"
+    val frequencyDays: String = "",       // e.g. "MONDAY,WEDNESDAY,FRIDAY"
+    val frequencyTargetPerWeek: Int = 0,
+    val reminderEnabled: Boolean = false,
+    val reminderTimes: String = "",       // e.g. "08:00,20:00"
+    val endEpochDay: Long? = null,
+    val colorHex: String? = null,
+    val iconKey: String? = null,
+    val notes: String? = null
 ) {
     val habitKind: HabitKind
         get() = try {

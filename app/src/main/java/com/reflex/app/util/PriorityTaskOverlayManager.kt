@@ -113,7 +113,19 @@ object PriorityTaskOverlayManager {
 
     @SuppressLint("InflateParams")
     private fun showInternal(context: Context, task: Task) {
-        if (!AppBlockPermissionHelper.hasOverlayPermission(context)) return
+        val appContext = context.applicationContext
+        if (!AppBlockPermissionHelper.hasOverlayPermission(appContext)) {
+            try {
+                val intent = Intent(appContext, com.reflex.app.ui.PriorityTaskAlertActivity::class.java).apply {
+                    putExtra(com.reflex.app.ui.PriorityTaskAlertActivity.EXTRA_TASK_ID, task.id)
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                }
+                appContext.startActivity(intent)
+            } catch (e: Exception) {
+                AppLog.e("PriorityTaskOverlayManager", "Failed to start PriorityTaskAlertActivity fallback", e)
+            }
+            return
+        }
 
         currentTaskState = task
         currentTaskId = task.id
@@ -123,7 +135,7 @@ object PriorityTaskOverlayManager {
         }
 
         if (windowManager == null) {
-            windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+            windowManager = appContext.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         }
 
         if (overlayView == null) {
@@ -134,7 +146,7 @@ object PriorityTaskOverlayManager {
             lifecycleOwner.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
             customLifecycleOwner = lifecycleOwner
 
-            val view = ComposeView(context).apply {
+            val view = ComposeView(appContext).apply {
                 setViewTreeLifecycleOwner(lifecycleOwner)
                 setViewTreeViewModelStoreOwner(object : ViewModelStoreOwner {
                     override val viewModelStore = ViewModelStore()
@@ -146,7 +158,7 @@ object PriorityTaskOverlayManager {
                         val activeTask = currentTaskState
                         if (activeTask != null) {
                             PriorityOverlayContent(
-                                context = context,
+                                context = appContext,
                                 task = activeTask,
                                 onDismiss = { hide() }
                             )
@@ -175,7 +187,16 @@ object PriorityTaskOverlayManager {
                 overlayView = view
                 isShowing = true
             } catch (e: Exception) {
-                AppLog.e("PriorityTaskOverlayManager", "Failed to show priority task overlay", e)
+                AppLog.e("PriorityTaskOverlayManager", "Failed to show priority task overlay, falling back to activity", e)
+                try {
+                    val intent = Intent(appContext, com.reflex.app.ui.PriorityTaskAlertActivity::class.java).apply {
+                        putExtra(com.reflex.app.ui.PriorityTaskAlertActivity.EXTRA_TASK_ID, task.id)
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    }
+                    appContext.startActivity(intent)
+                } catch (e2: Exception) {
+                    AppLog.e("PriorityTaskOverlayManager", "Failed to start PriorityTaskAlertActivity fallback", e2)
+                }
             }
         }
     }
@@ -235,6 +256,8 @@ fun PriorityOverlayContent(
                     onDismiss()
                     val intent = Intent(context, MainActivity::class.java).apply {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        putExtra(NotificationHelper.EXTRA_NAVIGATE_TO, "tasks")
+                        putExtra(NotificationHelper.EXTRA_TASK_ID, task.id)
                     }
                     context.startActivity(intent)
                 },

@@ -23,7 +23,7 @@ class BootReceiver : BroadcastReceiver() {
                 } catch (e: Exception) {
                     AppLog.e("BootReceiver", "Failed to reschedule alarms on boot", e)
                 } finally {
-                    pendingResult.finish()
+                    pendingResult?.finish()
                 }
             }
         }

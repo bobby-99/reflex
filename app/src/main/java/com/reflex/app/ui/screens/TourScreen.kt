@@ -122,6 +122,8 @@ fun TourScreen(
     val totalPages = if (isReplay) 5 else 6
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { totalPages })
     val lifecycleOwner = LocalLifecycleOwner.current
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+    val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
 
     // LifeCycle observer to refresh permissions when coming back from system settings
     DisposableEffect(lifecycleOwner) {
@@ -138,6 +140,8 @@ fun TourScreen(
 
     // Page-specific timers start/stop
     LaunchedEffect(pagerState.currentPage) {
+        focusManager.clearFocus(force = true)
+        keyboardController?.hide()
         when (pagerState.currentPage) {
             1 -> {
                 viewModel.stopTypewriter()
@@ -247,10 +251,8 @@ fun TourScreen(
             .imePadding(),
         contentAlignment = Alignment.Center
     ) {
-        // Main Container constrained to max 430dp
         Column(
             modifier = Modifier
-                .widthIn(max = 430.dp)
                 .fillMaxSize()
                 .padding(horizontal = 20.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -376,12 +378,16 @@ fun TourScreen(
                             .then(
                                 if (pagerState.currentPage > 0) {
                                     Modifier.clickable {
+                                        focusManager.clearFocus(force = true)
+                                        keyboardController?.hide()
                                         coroutineScope.launch {
                                             pagerState.animateScrollToPage(pagerState.currentPage - 1)
                                         }
                                     }
                                 } else if (isReplay) {
                                     Modifier.clickable {
+                                        focusManager.clearFocus(force = true)
+                                        keyboardController?.hide()
                                         onNavigateToSettings()
                                     }
                                 } else Modifier
@@ -407,6 +413,8 @@ fun TourScreen(
                             .clip(CircleShape)
                             .background(colors.pill)
                             .clickable {
+                                focusManager.clearFocus(force = true)
+                                keyboardController?.hide()
                                 coroutineScope.launch {
                                     pagerState.animateScrollToPage(pagerState.currentPage + 1)
                                 }
@@ -656,6 +664,8 @@ private fun TourWelcomePage(
     colors: SettingsColorTokens
 ) {
     val isKeyboardOpen = WindowInsets.isImeVisible
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+    val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     val heroSize by animateDpAsState(
         targetValue = if (isKeyboardOpen) 72.dp else 210.dp,
         animationSpec = tween(durationMillis = 300, easing = DecelerateEasing),
@@ -754,6 +764,15 @@ private fun TourWelcomePage(
                         color = colors.ink
                     ),
                     singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        imeAction = androidx.compose.ui.text.input.ImeAction.Done
+                    ),
+                    keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                        onDone = {
+                            focusManager.clearFocus(force = true)
+                            keyboardController?.hide()
+                        }
+                    ),
                     cursorBrush = SolidColor(colors.copper),
                     modifier = Modifier.fillMaxWidth()
                 )

@@ -6,6 +6,9 @@ import android.os.Bundle
 import com.reflex.app.data.ReflexDatabase
 import com.reflex.app.data.ReflexRepository
 import com.reflex.app.util.NotificationHelper
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class ReflexApplication : Application() {
 
@@ -38,6 +41,10 @@ class ReflexApplication : Application() {
         com.reflex.app.util.UserProfileRepository.init(this)
         com.reflex.app.util.SettingsRepository.init(this)
         NotificationHelper.createNotificationChannels(this)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            com.reflex.app.service.FocusTimerService.recoverInterruptedSession(this@ReflexApplication, repository)
+        }
 
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             private var startedCount = 0

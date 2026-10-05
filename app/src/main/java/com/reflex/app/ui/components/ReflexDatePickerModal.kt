@@ -56,6 +56,7 @@ data class DatePickerDayCell(
 @Composable
 fun ReflexDatePickerModal(
     initialDate: LocalDate = LocalDate.now(),
+    title: String = "Select date",
     onDismiss: () -> Unit,
     onDateSelected: (LocalDate) -> Unit
 ) {
@@ -79,7 +80,7 @@ fun ReflexDatePickerModal(
                     .padding(ReflexTokens.SpaceLg)
             ) {
                 Text(
-                    text = "Select due date",
+                    text = title,
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )

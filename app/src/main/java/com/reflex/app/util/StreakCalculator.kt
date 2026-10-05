@@ -13,7 +13,12 @@ data class StreakResult(
 
 object StreakCalculator {
 
-    fun calculateStreaks(logs: List<CompletionLog>, routine: Routine? = null): StreakResult {
+    fun calculateStreaks(
+        logs: List<CompletionLog>,
+        routine: Routine? = null,
+        zoneId: ZoneId = ZoneId.systemDefault(),
+        referenceDate: LocalDate = LocalDate.now(zoneId)
+    ): StreakResult {
         val scheduledDays = routine?.scheduledDaysSet ?: emptySet()
 
         if (scheduledDays.isEmpty()) {
@@ -25,12 +30,12 @@ object StreakCalculator {
 
             val completedDates: Set<LocalDate> = completedLogs.map { log ->
                 Instant.ofEpochMilli(log.dateCompleted)
-                    .atZone(ZoneId.systemDefault())
+                    .atZone(zoneId)
                     .toLocalDate()
             }.toSet()
 
             val sortedDates = completedDates.sorted()
-            val today = LocalDate.now()
+            val today = referenceDate
             val yesterday = today.minusDays(1)
 
             var currentStreak = 0
@@ -68,11 +73,11 @@ object StreakCalculator {
             // Schedule-Aware Streak Logic with 1-Day Grace & Explicit Skips
             val logsByDate: Map<LocalDate, List<CompletionLog>> = logs.groupBy { log ->
                 Instant.ofEpochMilli(log.dateCompleted)
-                    .atZone(ZoneId.systemDefault())
+                    .atZone(zoneId)
                     .toLocalDate()
             }
 
-            val today = LocalDate.now()
+            val today = referenceDate
             var currentStreak = 0
             var checkDate = today
 
@@ -89,8 +94,13 @@ object StreakCalculator {
                     val hasSkipped = dayLogs.any { it.isSkipped }
 
                     // Grace check: was checkDate completed by end-of-day checkDate + 1?
-                    val nextDayLogs = logsByDate[checkDate.plusDays(1)] ?: emptyList()
-                    val hasCompletedLate = !hasCompletedOnTime && !hasSkipped && nextDayLogs.any { it.isCompleted }
+                    // If next day is also scheduled, a single completion cannot double-satisfy both days.
+                    val nextDay = checkDate.plusDays(1)
+                    val nextDayLogs = logsByDate[nextDay] ?: emptyList()
+                    val nextDayIsScheduled = scheduledDays.contains(nextDay.dayOfWeek)
+                    val hasCompletedLate = !hasCompletedOnTime && !hasSkipped &&
+                        nextDayLogs.any { it.isCompleted } &&
+                        (!nextDayIsScheduled || nextDayLogs.count { it.isCompleted } > 1)
 
                     if (hasCompletedOnTime || hasSkipped || hasCompletedLate) {
                         currentStreak++
@@ -116,8 +126,12 @@ object StreakCalculator {
                     val dayLogs = logsByDate[evalDate] ?: emptyList()
                     val hasCompletedOnTime = dayLogs.any { it.isCompleted }
                     val hasSkipped = dayLogs.any { it.isSkipped }
-                    val nextDayLogs = logsByDate[evalDate.plusDays(1)] ?: emptyList()
-                    val hasCompletedLate = !hasCompletedOnTime && !hasSkipped && nextDayLogs.any { it.isCompleted }
+                    val nextDay = evalDate.plusDays(1)
+                    val nextDayLogs = logsByDate[nextDay] ?: emptyList()
+                    val nextDayIsScheduled = scheduledDays.contains(nextDay.dayOfWeek)
+                    val hasCompletedLate = !hasCompletedOnTime && !hasSkipped &&
+                        nextDayLogs.any { it.isCompleted } &&
+                        (!nextDayIsScheduled || nextDayLogs.count { it.isCompleted } > 1)
 
                     if (hasCompletedOnTime || hasSkipped || hasCompletedLate) {
                         tempStreak++
@@ -133,7 +147,11 @@ object StreakCalculator {
         }
     }
 
-    fun calculateFocusStreak(sessions: List<com.reflex.app.data.FocusSession>): StreakResult {
+    fun calculateFocusStreak(
+        sessions: List<com.reflex.app.data.FocusSession>,
+        zoneId: ZoneId = ZoneId.systemDefault(),
+        referenceDate: LocalDate = LocalDate.now(zoneId)
+    ): StreakResult {
         val completedSessions = sessions.filter { it.completed }
         if (completedSessions.isEmpty()) {
             return StreakResult(currentStreak = 0, bestStreak = 0)
@@ -141,12 +159,12 @@ object StreakCalculator {
 
         val completedDates: Set<LocalDate> = completedSessions.map { session ->
             Instant.ofEpochMilli(session.startTime)
-                .atZone(ZoneId.systemDefault())
+                .atZone(zoneId)
                 .toLocalDate()
         }.toSet()
 
         val sortedDates = completedDates.sorted()
-        val today = LocalDate.now()
+        val today = referenceDate
         val yesterday = today.minusDays(1)
 
         var currentStreak = 0
