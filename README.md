@@ -12,6 +12,10 @@
     <img alt="No network permission" src="https://img.shields.io/badge/network-none-8F4C2B?style=for-the-badge&labelColor=0A0908">
   </p>
 
+  <p>
+    <a href="https://ko-fi.com/P5X2288QK6"><img alt="ko-fi" src="https://ko-fi.com/img/githubbutton_sm.svg"></a>
+  </p>
+
   <!-- After the F-Droid merge request is accepted, replace the badge below with:
   [![F-Droid](https://img.shields.io/f-droid/v/com.reflex.productivity?style=flat-square)](https://f-droid.org/packages/com.reflex.productivity)
   -->
@@ -22,7 +26,8 @@
     <a href="#-install">Install</a> ·
     <a href="#-privacy-by-design">Privacy</a> ·
     <a href="#-build-from-source">Build</a> ·
-    <a href="#-contributing">Contribute</a>
+    <a href="#-contributing">Contribute</a> ·
+    <a href="#-support-reflex">Support</a>
   </p>
 </div>
 
@@ -264,6 +269,14 @@ Reflex is maintained by one person in spare time, so replies are best-effort. Pl
 - Open an [issue on GitHub](https://github.com/bobby-99/reflex/issues/new/choose) (preferred), or
 - Use **Settings → Report bugs / feedback** in the app, or email [`reflexhelpdesk.unworried192@simplelogin.com`](mailto:reflexhelpdesk.unworried192@simplelogin.com)
 - Security problems: see [SECURITY.md](SECURITY.md) and please report privately.
+
+---
+
+## ☕ Support Reflex
+
+Reflex is free, open source and built by one person. Star the repo if Reflex helps you, or consider supporting development on Ko-fi:
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/P5X2288QK6)
 
 ---
 

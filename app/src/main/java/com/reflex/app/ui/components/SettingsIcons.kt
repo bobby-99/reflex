@@ -69,7 +69,10 @@ object SettingsIconPaths {
         "clock" to "M12 4a8 8 0 1 0 0 16a8 8 0 0 0 0 -16z M12 8v4l3 2",
         "chev-down" to "M6 10l6 6l6 -6",
         "thunder" to "M13 2.5l-7.5 9.5h6l-1.5 9.5 9-11.5h-6z",
-        "bolt" to "M13 2.5l-7.5 9.5h6l-1.5 9.5 9-11.5h-6z"
+        "bolt" to "M13 2.5l-7.5 9.5h6l-1.5 9.5 9-11.5h-6z",
+        "star" to "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z",
+        "coffee" to "M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3",
+        "heart" to "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
     )
 
     private val parsedCache = mutableMapOf<String, Path>()

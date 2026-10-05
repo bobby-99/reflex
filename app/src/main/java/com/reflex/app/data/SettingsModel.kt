@@ -29,7 +29,8 @@ data class SettingItem(
     val fmt: String = "", // e.g. "hr"
     val value: String = "",
     val toast: String = "",
-    val targetScreenId: String? = null
+    val targetScreenId: String? = null,
+    val iconName: String? = null
 )
 
 data class SettingGroup(
@@ -688,7 +689,27 @@ object SettingsSchema {
             iconName = "info",
             groups = listOf(
                 SettingGroup(
-                    heading = "Feedback & Support",
+                    heading = "Support Reflex",
+                    caption = "Reflex is free, open source, and built with care. Tips and stars are optional and keep development going — everything stays free either way.",
+                    items = listOf(
+                        SettingItem(
+                            type = SettingItemType.LN,
+                            key = "star_github",
+                            label = "Star on GitHub",
+                            description = "Reflex is free and open source",
+                            iconName = "star"
+                        ),
+                        SettingItem(
+                            type = SettingItemType.LN,
+                            key = "kofi_tip",
+                            label = "Buy me a coffee on Ko-fi",
+                            description = "Tips are optional and keep development going",
+                            iconName = "coffee"
+                        )
+                    )
+                ),
+                SettingGroup(
+                    heading = "Feedback & Issues",
                     items = listOf(
                         SettingItem(
                             type = SettingItemType.LN,
@@ -736,7 +757,7 @@ object SettingsSchema {
                             type = SettingItemType.IN,
                             key = "privacy",
                             label = "Privacy",
-                            value = "Fully offline (no network)"
+                            value = "Fully offline (links open external browser)"
                         ),
                         SettingItem(
                             type = SettingItemType.LN,

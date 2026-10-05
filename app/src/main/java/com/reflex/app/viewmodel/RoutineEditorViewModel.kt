@@ -117,6 +117,7 @@ class RoutineEditorViewModel(
                 iconKey = tmpl.iconKey,
                 restBetweenStepsEnabled = if (tmpl.restBetweenStepsEnabled) true else isRestEnabled,
                 restDurationSeconds = if (tmpl.restBetweenStepsEnabled) tmpl.restDurationSeconds else restSec,
+                scheduledDays = tmpl.scheduledDays,
                 steps = mappedSteps,
                 isLoading = false
             )

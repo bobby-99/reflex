@@ -1,5 +1,7 @@
 package com.reflex.app.data
 
+import java.time.DayOfWeek
+
 data class RoutineTemplate(
     val id: String,
     val name: String,
@@ -7,6 +9,10 @@ data class RoutineTemplate(
     val iconKey: String,
     val restBetweenStepsEnabled: Boolean = false,
     val restDurationSeconds: Int = 15,
+    val scheduledDays: Set<DayOfWeek> = setOf(
+        DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
+        DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY
+    ),
     val steps: List<StepTemplate>
 )
 
@@ -90,6 +96,93 @@ object RoutineTemplates {
                 StepTemplate("Review today's tasks", StepType.CHECK_OFF, emoji = "📋"),
                 StepTemplate("Quick walk or stretch", StepType.TIMED, durationSeconds = 300, emoji = "🚶"),
                 StepTemplate("Set tomorrow's top priority", StepType.CHECK_OFF, emoji = "🎯")
+            )
+        ),
+        RoutineTemplate(
+            id = "deep_work_launch",
+            name = "Deep Work Launch",
+            description = "Get clear, remove distractions, and enter deep focus in 5 minutes.",
+            iconKey = "WORK",
+            steps = listOf(
+                StepTemplate("Phone out of reach", StepType.CHECK_OFF, emoji = "📵"),
+                StepTemplate("Water filled, desk clear", StepType.CHECK_OFF, emoji = "💧"),
+                StepTemplate("Brain dump (write down everything on your mind)", StepType.TIMED, durationSeconds = 120, notes = "Write down everything on your mind", emoji = "📝"),
+                StepTemplate("Pick the one task, in one sentence", StepType.CHECK_OFF, emoji = "🎯"),
+                StepTemplate("Define what \"done\" looks like", StepType.CHECK_OFF, emoji = "✅"),
+                StepTemplate("Box breathing (4-4-4-4)", StepType.TIMED, durationSeconds = 60, emoji = "🧘"),
+                StepTemplate("Close everything you don't need", StepType.CHECK_OFF, emoji = "💻")
+            )
+        ),
+        RoutineTemplate(
+            id = "desk_break",
+            name = "Desk Break",
+            description = "Quick 3-minute physical and visual reset for desk workers.",
+            iconKey = "MEDITATE",
+            restBetweenStepsEnabled = true,
+            restDurationSeconds = 10,
+            steps = listOf(
+                StepTemplate("Look 20 ft away (20-20-20 rule)", StepType.TIMED, durationSeconds = 20, emoji = "👀"),
+                StepTemplate("Neck rolls", StepType.TIMED, durationSeconds = 30, emoji = "🔄"),
+                StepTemplate("Shoulder rolls", StepType.REPEAT_COUNT, targetCount = 10, emoji = "💪"),
+                StepTemplate("Chest opener (hands clasped behind you)", StepType.TIMED, durationSeconds = 30, emoji = "🧘"),
+                StepTemplate("Wrist flexor and extensor stretch", StepType.TIMED, durationSeconds = 30, emoji = "✋"),
+                StepTemplate("Standing forward fold", StepType.TIMED, durationSeconds = 30, emoji = "🧘‍♂️"),
+                StepTemplate("Drink water", StepType.CHECK_OFF, emoji = "💧")
+            )
+        ),
+        RoutineTemplate(
+            id = "mobility_flow",
+            name = "Mobility Flow",
+            description = "Full-body joint mobility and dynamic stretching sequence.",
+            iconKey = "RUN",
+            restBetweenStepsEnabled = true,
+            restDurationSeconds = 15,
+            steps = listOf(
+                StepTemplate("Wrist prep", StepType.TIMED, durationSeconds = 45, emoji = "✋"),
+                StepTemplate("Cat-cow", StepType.TIMED, durationSeconds = 60, emoji = "🐈"),
+                StepTemplate("Thoracic rotations (per side)", StepType.REPEAT_COUNT, targetCount = 8, notes = "8 reps per side", emoji = "🔄"),
+                StepTemplate("Deep squat hold", StepType.TIMED, durationSeconds = 60, emoji = "🦵"),
+                StepTemplate("90/90 hip switch", StepType.TIMED, durationSeconds = 60, emoji = "🧘"),
+                StepTemplate("Shoulder dislocates (band or towel)", StepType.REPEAT_COUNT, targetCount = 10, emoji = "💪"),
+                StepTemplate("Hamstring fold", StepType.TIMED, durationSeconds = 60, emoji = "🧘‍♂️"),
+                StepTemplate("Dead hang", StepType.TIMED, durationSeconds = 30, emoji = "🏋️"),
+                StepTemplate("Child's pose", StepType.TIMED, durationSeconds = 60, emoji = "🧘")
+            )
+        ),
+        RoutineTemplate(
+            id = "evening_shutdown",
+            name = "Evening Shutdown",
+            description = "Close open loops and transition cleanly from work to evening.",
+            iconKey = "CHECK",
+            scheduledDays = setOf(
+                DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
+                DayOfWeek.THURSDAY, DayOfWeek.FRIDAY
+            ),
+            steps = listOf(
+                StepTemplate("Capture loose ends and open tabs", StepType.TIMED, durationSeconds = 120, emoji = "📋"),
+                StepTemplate("Move unfinished tasks to a new date", StepType.CHECK_OFF, emoji = "📅"),
+                StepTemplate("Pick tomorrow's top 3", StepType.CHECK_OFF, emoji = "🎯"),
+                StepTemplate("Glance at tomorrow's calendar", StepType.CHECK_OFF, emoji = "🗓️"),
+                StepTemplate("Clear desk, close laptop", StepType.CHECK_OFF, emoji = "💻"),
+                StepTemplate("Log one win from today", StepType.TIMED, durationSeconds = 60, emoji = "🌟"),
+                StepTemplate("Say \"shutdown complete\"", StepType.CHECK_OFF, emoji = "🔒")
+            )
+        ),
+        RoutineTemplate(
+            id = "weekly_review",
+            name = "Weekly Review",
+            description = "GTD-style weekly reflection, cleanup, and next week planning.",
+            iconKey = "STAR",
+            scheduledDays = setOf(DayOfWeek.SUNDAY),
+            steps = listOf(
+                StepTemplate("Empty your head", StepType.TIMED, durationSeconds = 180, emoji = "🧠"),
+                StepTemplate("Review last week's wins (habits and completed tasks)", StepType.TIMED, durationSeconds = 120, emoji = "🏆"),
+                StepTemplate("Handle overdue and missed items", StepType.TIMED, durationSeconds = 180, emoji = "🧹"),
+                StepTemplate("Scan the next 7 days of calendar", StepType.TIMED, durationSeconds = 120, emoji = "📅"),
+                StepTemplate("Set 3 priorities for the week", StepType.TIMED, durationSeconds = 180, emoji = "🎯"),
+                StepTemplate("Schedule your focus blocks", StepType.CHECK_OFF, emoji = "⏱️"),
+                StepTemplate("Pick one habit to tighten or drop", StepType.CHECK_OFF, emoji = "🌱"),
+                StepTemplate("Prep tomorrow (bag, clothes)", StepType.CHECK_OFF, emoji = "🎒")
             )
         )
     )

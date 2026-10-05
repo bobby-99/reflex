@@ -1,5 +1,6 @@
 package com.reflex.app.ui.screens
 
+import android.app.Activity
 import android.Manifest
 import android.content.Context
 import android.content.Intent
@@ -603,7 +604,9 @@ fun SettingsScreen(
                                             "licenses" -> showLicensesDialog = true
                                             "feedback" -> sendFeedbackEmail(context)
                                             "github_issues" -> openBrowserUrl(context, com.reflex.app.util.AppConstants.GITHUB_ISSUES_URL)
-                                            "source_code" -> openBrowserUrl(context, com.reflex.app.util.AppConstants.GITHUB_REPO_URL)
+                                            "source_code" -> openBrowserUrl(context, com.reflex.app.util.Links.GITHUB_REPO)
+                                            "star_github" -> openBrowserUrl(context, com.reflex.app.util.Links.GITHUB_REPO)
+                                            "kofi_tip" -> openBrowserUrl(context, com.reflex.app.util.Links.KO_FI)
                                             else -> {
                                                 if (item.toast.isNotBlank()) showToast(item.toast)
                                             }
@@ -1035,7 +1038,13 @@ private fun SettingsHomeScreenContent(
                 SettingsSchema.SC.forEach { (screenId, screenDef) ->
                     screenDef.groups.forEach { group ->
                         group.items.forEach { item ->
-                            if ((item.label + " " + item.description).lowercase().contains(q)) {
+                            val extraKeywords = when (item.key) {
+                                "star_github" -> "star github support open source repo contribute"
+                                "kofi_tip" -> "buy me a coffee on ko-fi kofi donate tip support sponsor contribute"
+                                else -> ""
+                            }
+                            val searchableText = (item.label + " " + item.description + " " + group.heading + " " + (group.caption ?: "") + " " + extraKeywords).lowercase()
+                            if (searchableText.contains(q)) {
                                 list.add(Triple(screenId, "${screenDef.title} › ${group.heading}", item))
                             }
                         }
@@ -1963,10 +1972,33 @@ private fun SettingsGenericSubScreenContent(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .heightIn(min = 64.dp)
-                                    .clickable { onLinkAction(item) }
-                                    .padding(vertical = 10.dp),
+                                    .clickable(
+                                        role = Role.Button,
+                                        onClickLabel = item.label
+                                    ) { onLinkAction(item) }
+                                    .padding(vertical = 10.dp)
+                                    .semantics {
+                                        contentDescription = if (item.description.isNotBlank()) "${item.label}, ${item.description}" else item.label
+                                    },
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
+                                if (item.iconName != null) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(44.dp)
+                                            .clip(RoundedCornerShape(18.dp))
+                                            .background(colors.chip),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        SettingsIcon(
+                                            name = item.iconName,
+                                            tint = colors.copper,
+                                            size = 22.dp
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(14.dp))
+                                }
+
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = item.label,
@@ -2812,12 +2844,17 @@ private fun sendFeedbackEmail(context: Context) {
 private fun openBrowserUrl(context: Context, url: String) {
     try {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            if (context.findActivity() == null) {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
         }
         context.startActivity(intent)
+    } catch (e: android.content.ActivityNotFoundException) {
+        com.reflex.app.util.AppLog.e("SettingsScreen", "No browser found for URL $url", e)
+        android.widget.Toast.makeText(context, "No browser found", android.widget.Toast.LENGTH_SHORT).show()
     } catch (e: Exception) {
         com.reflex.app.util.AppLog.e("SettingsScreen", "Failed to open URL $url", e)
-        android.widget.Toast.makeText(context, "Could not open browser for: $url", android.widget.Toast.LENGTH_SHORT).show()
+        android.widget.Toast.makeText(context, "No browser found", android.widget.Toast.LENGTH_SHORT).show()
     }
 }
 

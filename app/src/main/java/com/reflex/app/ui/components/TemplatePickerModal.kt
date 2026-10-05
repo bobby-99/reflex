@@ -127,8 +127,24 @@ private fun TemplateRow(
     onClick: () -> Unit
 ) {
     val vectorIcon = RoutineIcon.fromKey(template.iconKey).icon
-    val totalSeconds = template.steps.sumOf { it.durationSeconds ?: 60 }
+    val restCount = if (template.restBetweenStepsEnabled && template.steps.size > 1) template.steps.size - 1 else 0
+    val totalRestSeconds = restCount * template.restDurationSeconds
+    val totalStepSeconds = template.steps.sumOf { step ->
+        when (step.stepType) {
+            com.reflex.app.data.StepType.TIMED -> step.durationSeconds ?: 60
+            com.reflex.app.data.StepType.REPEAT_COUNT -> ((step.targetCount ?: 10) * 3).coerceAtLeast(30)
+            com.reflex.app.data.StepType.CHECK_OFF -> 30
+        }
+    }
+    val totalSeconds = totalStepSeconds + totalRestSeconds
     val estimatedMins = (totalSeconds / 60).coerceAtLeast(1)
+    val timeLabel = if (estimatedMins >= 60) {
+        val h = estimatedMins / 60
+        val m = estimatedMins % 60
+        if (m > 0) "~${h}h ${m}m" else "~${h}h"
+    } else {
+        "~$estimatedMins mins"
+    }
 
     Box(
         modifier = Modifier
@@ -175,7 +191,7 @@ private fun TemplateRow(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "${template.steps.size} steps • ~$estimatedMins mins",
+                    text = "${template.steps.size} steps • $timeLabel",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
