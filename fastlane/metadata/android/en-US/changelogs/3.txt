@@ -1,0 +1,4 @@
+• Full routine preset library: added 5 new routines (Deep Work Launch, Desk Break, Mobility Flow, Evening Shutdown, Weekly Review) with dynamic duration calculations and schedule-aware streaks.
+• In-app GitHub star and Ko-fi tip links in Settings with offline fallback handling.
+• Frosted glass navigation bar polish and updated brand assets.
+• CI test pipeline and build optimizations.

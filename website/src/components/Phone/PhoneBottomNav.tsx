@@ -17,9 +17,13 @@ export const PhoneBottomNav: React.FC<PhoneBottomNavProps> = ({
     <div className="absolute bottom-[24px] left-[16px] right-[16px] z-30 pointer-events-auto">
       <nav
         aria-label="Phone navigation"
-        className={`h-[72px] rounded-[36px] px-2 flex items-center justify-between transition-colors duration-300 ${
+        className={`h-[72px] rounded-[36px] px-2 flex items-center justify-between transition-colors duration-300 shadow-xl backdrop-blur-xl ${
           isDarkTheme ? 'reflex-glass-dark' : 'reflex-glass-light'
         }`}
+        style={{
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+        }}
       >
         {/* Tab 1: Routines */}
         <button
