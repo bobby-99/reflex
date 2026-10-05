@@ -1,7 +1,16 @@
 <div align="center">
   <img src="fastlane/metadata/android/en-US/images/icon.png" alt="Reflex icon" width="112" height="112">
-  <h1>Reflex</h1>
-  <p><strong>Routines, habits, tasks and deep focus, in one calm app that never leaves your phone.</strong></p>
+
+  # Reflex
+
+  **Routines, habits, tasks and deep focus, in one calm app that never leaves your phone.**
+
+  <p>
+    <a href="https://github.com/bobby-99/reflex/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/bobby-99/reflex?style=for-the-badge&color=8F4C2B&labelColor=0A0908"></a>
+    <a href="LICENSE"><img alt="License: GPL-3.0-or-later" src="https://img.shields.io/badge/license-GPL--3.0--or--later-8F4C2B?style=for-the-badge&labelColor=0A0908"></a>
+    <img alt="Android 8.0+" src="https://img.shields.io/badge/android-8.0%2B-8F4C2B?style=for-the-badge&labelColor=0A0908">
+    <img alt="No network permission" src="https://img.shields.io/badge/network-none-8F4C2B?style=for-the-badge&labelColor=0A0908">
+  </p>
 
   <!-- After the F-Droid merge request is accepted, replace the badge below with:
   [![F-Droid](https://img.shields.io/f-droid/v/com.reflex.productivity?style=flat-square)](https://f-droid.org/packages/com.reflex.productivity)
@@ -23,7 +32,14 @@
 
 Most productivity apps want an account, a subscription and your data. Reflex wants none of them.
 
-It is a timer-driven routine runner, habit tracker, task manager and focus companion that works 100% offline. There is no sign-in, no cloud, no analytics and no network permission. Everything lives in a local database on your device, and you can export it any time as a plain JSON file.
+It is a timer-driven routine runner, habit tracker, task manager and focus companion that works **100% offline**. Everything lives in a local database on your device, and you can export it any time as a plain JSON file.
+
+| | |
+| :--- | :--- |
+| 🚫 **No accounts** | No sign-in, no cloud |
+| 📡 **No network** | The `INTERNET` permission is not declared |
+| 🕵️ **No tracking** | No analytics, ads or trackers |
+| 📦 **Portable** | One-tap JSON export and import |
 
 It is also built to be pleasant to look at: warm paper in light mode, obsidian in dark, a single copper accent, bundled Lora typography and soft, rounded surfaces.
 
@@ -50,42 +66,65 @@ It is also built to be pleasant to look at: warm paper in light mode, obsidian i
 
 ## ✨ Features
 
-### Routines
-Build a routine from sequential steps and let Reflex run it for you.
+<details open>
+<summary><b>🔁 Routines</b>: build sequential steps and let Reflex run them</summary>
+
 - Three step types: **Timed**, **Check-off** and **Repeat-count**, with an optional 10 to 30 second rest between steps and a "Skip rest" button
 - Audio and haptic cues, keep-screen-on while running, and a foreground service so a timer survives leaving the app
 - Drag-and-drop step reordering
 - Starter templates: *Morning Routine*, *Night Wind-Down*, *Focus Pomodoro*, *7-Minute Workout* and *Daily Reset*
 - Schedule-aware streaks with a one-day grace period ("completed late"), a "Skip today" option and a four-state heatmap: *on time*, *late*, *skipped*, *missed*
 
-### Tasks
+</details>
+
+<details open>
+<summary><b>✅ Tasks</b>: due dates, recurrence and natural-language capture</summary>
+
 - Due dates and times, notes, priorities (none, low, medium, high) and full recurrence (daily, weekly, monthly, yearly, custom), counted from the due date or from completion
 - Filters with live counts: *All*, *Today*, *Upcoming*, *No date*, *Completed*
 - Swipe right to complete, swipe left to delete, with undo
 - Natural-language Quick Add that parses dates, times, priorities and repeats as you type, with live highlighting (see the [syntax](#-quick-add-syntax) below)
 - Priority alerts for medium and high tasks: a floating card over any app and a lock-screen alert with Mark done, Open and snooze chips (5 min, 10 min, 15 min, 30 min, 1 hour, Tomorrow)
 
-### Habits
+</details>
+
+<details open>
+<summary><b>🌱 Habits</b>: schedules, rings and streaks</summary>
+
 - Daily, weekdays, weekends or specific days, with an optional daily reminder
 - Completion rings, a Monday to Sunday week view, and current and best streaks that respect each habit's schedule
 - A bundled [OpenMoji](https://openmoji.org/) emoji picker organized by *Wellness*, *Exercise*, *Mind*, *Nutrition* and *Productivity*
 
-### Focus
+</details>
+
+<details open>
+<summary><b>🎯 Focus</b>: Pomodoro, flow modes and app blocking</summary>
+
 - Classic Pomodoro (25 / 5 / 15 over four cycles, fully adjustable), Timed Flow (15 to 120 minutes) and Open Flow (count up, no target)
 - A liquid hero timer, a cycle strip, optional auto-start for breaks, and a link to the task you are working on
 - App blocking during focus phases, with a "Back to focus" overlay. It pauses on breaks and always lets Phone, Messages and system settings through
 - Focus analytics: a daily goal ring, week, month and year charts, a 365-day consistency heatmap, time-of-day and session-type breakdowns, and your top tasks
 
-### Calendar
+</details>
+
+<details open>
+<summary><b>📅 Calendar</b>: one agenda for everything</summary>
+
 - An agenda timeline that hides empty days, a compact week strip and an expandable month grid
 - Tasks, routines and (optionally) your device calendars side by side, color-coded and configurable (look-ahead window, first day of the week, what to include)
 
-### Settings, backup and reliability
+</details>
+
+<details open>
+<summary><b>⚙️ Settings, backup and reliability</b></summary>
+
 - System, Dark and Light themes with a smooth switcher
 - Live permission diagnostics that tell you exactly what is granted and take you straight to the right system page
 - One-tap JSON export and import of routines, tasks, habits, focus history, your profile and your preferences
 - Reminders use the system alarm-clock API, so they keep firing under Doze, and they are restored after a reboot or an app update
 - A replayable onboarding tour and a built-in way to send feedback
+
+</details>
 
 ---
 
@@ -103,11 +142,14 @@ Type naturally. Reflex pulls out what it understands and keeps the rest as the t
 | `!` · `p3` | Low priority |
 | `every tuesday`, `every 2 weeks`, `repeat every weekday` | Recurrence |
 
-> **Examples:**
-> - `Submit report tmrw 5pm !!!`
-> - `Standup every tuesday 9am`
-> - `Water plants every 2 weeks`
-> - `Stretch in 45 mins`
+**Examples**
+
+```text
+Submit report tmrw 5pm !!!
+Standup every tuesday 9am
+Water plants every 2 weeks
+Stretch in 45 mins
+```
 
 ---
 
@@ -129,18 +171,23 @@ Read the full statement in [PRIVACY.md](PRIVACY.md).
 | [GitHub Releases](https://github.com/bobby-99/reflex/releases/latest) | Download `Reflex-vX.Y.Z.apk` and `Reflex-vX.Y.Z.apk.sha256`. Allow installs from your browser or file manager if Android asks. |
 | F-Droid | *Coming soon.* |
 
-Requires Android 8.0 (API 26) or newer, and is built and tested for Android 16.
+Requires **Android 8.0 (API 26)** or newer, and is built and tested for Android 16.
 
 > [!NOTE]
 > **Switching between GitHub and F-Droid builds?** The two are signed with different keys, so Android will not update one over the other. Use **Settings → Data → Export** first, uninstall, install the other build, then **Import**.
 
-**Verify a download:**
+**Verify a download**
+
 ```bash
 sha256sum -c Reflex-vX.Y.Z.apk.sha256
 ```
 
-### Permissions
-Reflex asks only for what a feature needs, and each is optional unless the feature is used.
+<details>
+<summary><b>Permissions</b>: Reflex asks only for what a feature needs</summary>
+
+<br>
+
+Each permission is optional unless the feature is used.
 
 | Permission | Why |
 | :--- | :--- |
@@ -154,11 +201,13 @@ Reflex asks only for what a feature needs, and each is optional unless the featu
 | Ignore battery optimization | Optional, for the most dependable reminders on aggressive devices |
 | Vibrate | Haptic cues |
 
+</details>
+
 ---
 
 ## 🛠 Build from source
 
-You need JDK 17 or newer and the Android SDK (Android Studio is the easiest way to get both).
+You need **JDK 17 or newer** and the **Android SDK** (Android Studio is the easiest way to get both).
 
 ```bash
 git clone https://github.com/bobby-99/reflex.git
@@ -203,6 +252,7 @@ Bundled Lora with tabular numerals, rounded surfaces (16dp and up), sentence cas
 ## 🤝 Contributing
 
 Contributions, bug reports and ideas are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first. In short:
+
 - Keep it offline and tracker-free. No network permission, telemetry or proprietary dependencies.
 - Follow [DESIGN.md](DESIGN.md) for anything visual.
 - Run `./gradlew lint testDebugUnitTest` before opening a pull request.
@@ -210,6 +260,7 @@ Contributions, bug reports and ideas are welcome. Read [CONTRIBUTING.md](CONTRIB
 Reflex is maintained by one person in spare time, so replies are best-effort. Please be kind and patient. See the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ### Feedback and bugs
+
 - Open an [issue on GitHub](https://github.com/bobby-99/reflex/issues/new/choose) (preferred), or
 - Use **Settings → Report bugs / feedback** in the app, or email [`reflexhelpdesk.unworried192@simplelogin.com`](mailto:reflexhelpdesk.unworried192@simplelogin.com)
 - Security problems: see [SECURITY.md](SECURITY.md) and please report privately.
