@@ -72,6 +72,6 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
-          arch: aarch64
+          arch: arm64-v8a
           target: google_apis
           script: ./gradlew connectedDebugAndroidTest --no-daemon --stacktrace
