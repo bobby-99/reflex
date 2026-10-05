@@ -746,23 +746,61 @@ fun RoutineListScreen(
                 )
             }
 
-            // + New routine pill button
-            Box(
-                modifier = Modifier
-                    .height(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.onSurface)
-                    .clickable { onCreateRoutine() }
-                    .padding(horizontal = 16.dp),
-                contentAlignment = Alignment.Center
+            // Header actions: Presets & + New routine
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "+ New routine",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.surface
-                )
+                // Presets chip button
+                Box(
+                    modifier = Modifier
+                        .height(38.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.secondaryContainer)
+                        .border(
+                            BorderStroke(ReflexTokens.BorderHairline, MaterialTheme.colorScheme.outline),
+                            CircleShape
+                        )
+                        .clickable { showTemplatePicker = true }
+                        .padding(horizontal = 14.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = "✨",
+                            fontSize = 13.sp
+                        )
+                        Text(
+                            text = "Presets",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+
+                // + New routine pill button
+                Box(
+                    modifier = Modifier
+                        .height(38.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.onSurface)
+                        .clickable { showTemplatePicker = true }
+                        .padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "+ New routine",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.surface
+                    )
+                }
             }
         }
 

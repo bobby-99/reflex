@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Pause, SkipForward, CheckCircle2, RotateCcw, Flame, Check, Hourglass, Settings as SettingsIcon } from 'lucide-react';
+import { Play, Pause, SkipForward, CheckCircle2, RotateCcw, Flame, Check, Hourglass, Settings as SettingsIcon, Plus, X, Sparkles, Clock } from 'lucide-react';
 
 interface RoutinesScreenProps {
   isDarkTheme: boolean;
@@ -14,11 +14,114 @@ interface RoutineStep {
   targetReps?: number;
 }
 
-const RESET_WORKOUT_STEPS: RoutineStep[] = [
-  { title: 'Warmup Neck & Shoulder Rolls', type: 'timed', durationSec: 120 },
-  { title: 'Torso Twists & Hip Openers', type: 'timed', durationSec: 180 },
-  { title: 'Deep Diaphragmatic Breathwork', type: 'timed', durationSec: 120 },
-  { title: 'Calf Raises & Wall Sits', type: 'reps', targetReps: 25 },
+interface RoutineTemplateItem {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  stepsCount: number;
+  durationLabel: string;
+  steps: RoutineStep[];
+}
+
+const ALL_ROUTINE_PRESETS: RoutineTemplateItem[] = [
+  {
+    id: 'morning_routine',
+    name: 'Morning Routine',
+    description: 'Start your day with hydration, sunlight, movement, and focus.',
+    icon: '☀️',
+    stepsCount: 6,
+    durationLabel: '~16 mins',
+    steps: [
+      { title: 'Drink a glass of water', type: 'checkoff' },
+      { title: 'Step outside / get sunlight', type: 'timed', durationSec: 300 },
+      { title: 'Stretch', type: 'timed', durationSec: 300 },
+      { title: 'Breathe / meditate', type: 'timed', durationSec: 300 },
+      { title: "Plan today's top 3 priorities", type: 'checkoff' },
+      { title: 'Make your bed', type: 'checkoff' },
+    ],
+  },
+  {
+    id: 'deep_work_launch',
+    name: 'Deep Work Launch',
+    description: 'Get clear, remove distractions, and enter deep focus in 5 minutes.',
+    icon: '⚡',
+    stepsCount: 7,
+    durationLabel: '~5 mins',
+    steps: [
+      { title: 'Phone out of reach', type: 'checkoff' },
+      { title: 'Water filled, desk clear', type: 'checkoff' },
+      { title: 'Brain dump (write down thoughts)', type: 'timed', durationSec: 120 },
+      { title: 'Pick the one task, in one sentence', type: 'checkoff' },
+      { title: 'Define what "done" looks like', type: 'checkoff' },
+      { title: 'Box breathing (4-4-4-4)', type: 'timed', durationSec: 60 },
+      { title: "Close everything you don't need", type: 'checkoff' },
+    ],
+  },
+  {
+    id: 'workout_circuit',
+    name: '7-Minute Workout',
+    description: 'Interval circuit with automatic rest breaks.',
+    icon: '🏃',
+    stepsCount: 6,
+    durationLabel: '~6 mins',
+    steps: [
+      { title: 'Jumping jacks', type: 'timed', durationSec: 30 },
+      { title: 'Wall sit', type: 'timed', durationSec: 30 },
+      { title: 'Push-ups', type: 'reps', targetReps: 15 },
+      { title: 'Ab crunches', type: 'reps', targetReps: 20 },
+      { title: 'Squats', type: 'reps', targetReps: 20 },
+      { title: 'Step-ups / high knees', type: 'timed', durationSec: 30 },
+    ],
+  },
+  {
+    id: 'desk_break',
+    name: 'Desk Break',
+    description: 'Quick 3-minute physical and visual reset for desk workers.',
+    icon: '🧘',
+    stepsCount: 7,
+    durationLabel: '~4 mins',
+    steps: [
+      { title: 'Look 20 ft away (20-20-20 rule)', type: 'timed', durationSec: 20 },
+      { title: 'Neck rolls', type: 'timed', durationSec: 30 },
+      { title: 'Shoulder rolls', type: 'reps', targetReps: 10 },
+      { title: 'Chest opener (hands clasped behind)', type: 'timed', durationSec: 30 },
+      { title: 'Wrist flexor & extensor stretch', type: 'timed', durationSec: 30 },
+      { title: 'Standing forward fold', type: 'timed', durationSec: 30 },
+      { title: 'Drink water', type: 'checkoff' },
+    ],
+  },
+  {
+    id: 'night_wind_down',
+    name: 'Night Wind-Down',
+    description: 'ADHD-friendly calm wind-down structure before bed.',
+    icon: '🌙',
+    stepsCount: 6,
+    durationLabel: '~20 mins',
+    steps: [
+      { title: "Set out tomorrow's clothes/bag", type: 'checkoff' },
+      { title: 'Screens off, phone away', type: 'checkoff' },
+      { title: 'Light stretch or deep breathing', type: 'timed', durationSec: 300 },
+      { title: 'One-line journal / brain dump', type: 'timed', durationSec: 180 },
+      { title: 'Read or low-stimulation activity', type: 'timed', durationSec: 600 },
+      { title: 'Lights down, into bed', type: 'checkoff' },
+    ],
+  },
+  {
+    id: 'daily_reset',
+    name: 'Daily Reset',
+    description: 'Midday or evening reset to clear clutter and refocus.',
+    icon: '🧹',
+    stepsCount: 5,
+    durationLabel: '~12 mins',
+    steps: [
+      { title: 'Tidy your space', type: 'timed', durationSec: 300 },
+      { title: 'Drink water', type: 'checkoff' },
+      { title: "Review today's tasks", type: 'checkoff' },
+      { title: 'Quick walk or stretch', type: 'timed', durationSec: 300 },
+      { title: "Set tomorrow's top priority", type: 'checkoff' },
+    ],
+  },
 ];
 
 export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
@@ -26,13 +129,15 @@ export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
   onOpenSettings,
   autoStartRoutineId,
 }) => {
+  const [activeRoutine, setActiveRoutine] = useState<RoutineTemplateItem>(ALL_ROUTINE_PRESETS[2]); // Default 7-minute workout
   const [isRunningRunner, setIsRunningRunner] = useState<boolean>(false);
   const [currentStepIdx, setCurrentStepIdx] = useState<number>(0);
-  const [stepTimerSec, setStepTimerSec] = useState<number>(120);
+  const [stepTimerSec, setStepTimerSec] = useState<number>(60);
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
   const [isCompletedRoutine, setIsCompletedRoutine] = useState<boolean>(false);
   const [autoAdvance, setAutoAdvance] = useState<boolean>(true);
   const [confettiActive, setConfettiActive] = useState<boolean>(false);
+  const [showTemplateModal, setShowTemplateModal] = useState<boolean>(false);
 
   // Tasks today check-off states
   const [taskStates, setTaskStates] = useState<Record<string, boolean>>({
@@ -44,7 +149,8 @@ export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
 
   useEffect(() => {
     if (autoStartRoutineId) {
-      startRunner();
+      const found = ALL_ROUTINE_PRESETS.find((p) => p.id === autoStartRoutineId || p.id === 'morning_routine') || ALL_ROUTINE_PRESETS[0];
+      startPreset(found);
     }
   }, [autoStartRoutineId]);
 
@@ -65,21 +171,27 @@ export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isTimerRunning, stepTimerSec]);
+  }, [isTimerRunning, stepTimerSec, currentStepIdx, activeRoutine]);
 
-  const startRunner = () => {
+  const startPreset = (preset: RoutineTemplateItem) => {
+    setActiveRoutine(preset);
     setIsRunningRunner(true);
     setCurrentStepIdx(0);
     setIsCompletedRoutine(false);
-    setStepTimerSec(RESET_WORKOUT_STEPS[0].durationSec || 60);
+    setStepTimerSec(preset.steps[0]?.durationSec || 60);
     setIsTimerRunning(true);
+    setShowTemplateModal(false);
+  };
+
+  const startRunner = () => {
+    startPreset(activeRoutine);
   };
 
   const handleStepFinished = () => {
-    if (currentStepIdx < RESET_WORKOUT_STEPS.length - 1) {
+    if (currentStepIdx < activeRoutine.steps.length - 1) {
       const nextIdx = currentStepIdx + 1;
       setCurrentStepIdx(nextIdx);
-      const nextStep = RESET_WORKOUT_STEPS[nextIdx];
+      const nextStep = activeRoutine.steps[nextIdx];
       setStepTimerSec(nextStep?.durationSec || 60);
       setIsTimerRunning(autoAdvance);
     } else {
@@ -108,8 +220,8 @@ export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
 
   // 1. ACTIVE RUNNING IMMERSION RUNNER
   if (isRunningRunner) {
-    const currentStep = RESET_WORKOUT_STEPS[currentStepIdx];
-    const totalSteps = RESET_WORKOUT_STEPS.length;
+    const currentStep = activeRoutine.steps[currentStepIdx] || activeRoutine.steps[0];
+    const totalSteps = activeRoutine.steps.length;
     const progressPct = ((currentStepIdx + (isCompletedRoutine ? 1 : 0)) / totalSteps) * 100;
 
     return (
@@ -124,9 +236,9 @@ export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
           >
             ← Exit
           </button>
-          <div className="text-center">
-            <span className={`text-[12px] font-medium tracking-wide ${isDarkTheme ? 'text-[#D9A184]' : 'text-[#8F4C2B]'}`}>
-              7-Minute Reset Workout
+          <div className="text-center px-1 truncate">
+            <span className={`text-[12px] font-medium tracking-wide block truncate max-w-[170px] ${isDarkTheme ? 'text-[#D9A184]' : 'text-[#8F4C2B]'}`}>
+              {activeRoutine.icon} {activeRoutine.name}
             </span>
             <div className={`text-[11px] ${isDarkTheme ? 'text-[#A39E98]' : 'text-[#5D5750]'}`}>
               Step {currentStepIdx + 1} of {totalSteps}
@@ -158,9 +270,9 @@ export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
             <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${isDarkTheme ? 'bg-[#2A1C16] text-[#4ADE80]' : 'bg-[#327A54]/15 text-[#327A54]'}`}>
               <CheckCircle2 className="w-10 h-10" />
             </div>
-            <h3 className="text-[24px] font-bold mb-1">Workout completed</h3>
+            <h3 className="text-[24px] font-bold mb-1">{activeRoutine.name} done</h3>
             <p className={`text-[13px] max-w-[240px] mb-6 ${isDarkTheme ? 'text-[#A39E98]' : 'text-[#5D5750]'}`}>
-              All 4 steps completed. Streak increased to 15 days!
+              All {totalSteps} steps completed. Consistency streak maintained!
             </p>
             {confettiActive && (
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
@@ -179,13 +291,13 @@ export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center px-2">
             <span className={`text-[12px] uppercase tracking-wider mb-2 ${isDarkTheme ? 'text-[#A39E98]' : 'text-[#5D5750]'}`}>
-              {currentStep?.type === 'timed' ? 'Timed Interval' : 'Target Repetitions'}
+              {currentStep?.type === 'timed' ? 'Timed Interval' : currentStep?.type === 'reps' ? 'Target Repetitions' : 'Check-off Step'}
             </span>
             <h2 className="text-[22px] font-bold max-w-[260px] leading-snug mb-4">
               {currentStep?.title}
             </h2>
 
-            {currentStep?.type === 'timed' ? (
+            {currentStep?.type === 'timed' && (
               <div className="my-4">
                 <div className="text-[64px] font-bold leading-none tnum tracking-tight">
                   {formatTime(stepTimerSec)}
@@ -194,7 +306,9 @@ export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
                   {isTimerRunning ? 'Countdown in progress' : 'Paused'}
                 </div>
               </div>
-            ) : (
+            )}
+
+            {currentStep?.type === 'reps' && (
               <div className="my-4">
                 <div className="text-[54px] font-bold leading-none tnum">
                   {currentStep.targetReps}
@@ -205,9 +319,22 @@ export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
               </div>
             )}
 
+            {currentStep?.type === 'checkoff' && (
+              <div className="my-4 flex flex-col items-center">
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center border-2 mb-2 ${
+                  isDarkTheme ? 'border-[#D9A184] text-[#D9A184]' : 'border-[#8F4C2B] text-[#8F4C2B]'
+                }`}>
+                  <Check className="w-8 h-8 stroke-[2.5]" />
+                </div>
+                <div className={`text-[13px] ${isDarkTheme ? 'text-[#A39E98]' : 'text-[#5D5750]'}`}>
+                  Tap Done when finished
+                </div>
+              </div>
+            )}
+
             {currentStepIdx < totalSteps - 1 && (
               <div className={`text-[11px] mt-4 px-3 py-1 rounded-full ${isDarkTheme ? 'bg-[#1C1A17] text-[#A39E98]' : 'bg-[#EFEAE4] text-[#5D5750]'}`}>
-                Next: {RESET_WORKOUT_STEPS[currentStepIdx + 1]?.title}
+                Next: {activeRoutine.steps[currentStepIdx + 1]?.title}
               </div>
             )}
           </div>
@@ -260,10 +387,10 @@ export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
     );
   }
 
-  // 2. MAIN DASHBOARD VIEW (Matching 1_routines.png)
+  // 2. MAIN DASHBOARD VIEW
   return (
-    <div className={`h-full overflow-y-auto reflex-scrollbar px-4 pt-6 pb-28 ${isDarkTheme ? 'text-[#F5F2EF]' : 'text-[#1A1614]'}`}>
-      {/* Top Header: Good afternoon Bobby + Settings */}
+    <div className={`relative h-full overflow-y-auto reflex-scrollbar px-4 pt-6 pb-28 ${isDarkTheme ? 'text-[#F5F2EF]' : 'text-[#1A1614]'}`}>
+      {/* Top Header: Good afternoon Bobby + Presets + Settings */}
       <div className="flex items-start justify-between mb-4">
         <div>
           <span className={`text-[13px] block leading-snug ${isDarkTheme ? 'text-[#A39E98]' : 'text-[#5D5750]'}`}>
@@ -277,19 +404,20 @@ export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
           </span>
         </div>
 
-        <div className="flex items-center gap-2 pt-2">
+        <div className="flex items-center gap-1.5 pt-2">
           <button
-            onClick={() => {}}
-            className={`w-[36px] h-[36px] rounded-full flex items-center justify-center transition-colors ${
-              isDarkTheme ? 'bg-[#1C1A17] text-[#A39E98]' : 'bg-[#EFEAE4] text-[#5D5750]'
+            onClick={() => setShowTemplateModal(true)}
+            className={`px-3 py-1.5 rounded-full text-[12px] font-semibold flex items-center gap-1 transition-transform active:scale-95 ${
+              isDarkTheme ? 'bg-[#2A1C16] text-[#D9A184] border border-[#D9A184]/40' : 'bg-[#F7EBE3] text-[#8F4C2B] border border-[#8F4C2B]/30'
             }`}
-            title="History"
+            title="Browse Routine Presets"
           >
-            <RotateCcw className="w-4 h-4" />
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Presets</span>
           </button>
           <button
             onClick={onOpenSettings}
-            className={`w-[36px] h-[36px] rounded-full flex items-center justify-center transition-colors ${
+            className={`w-[34px] h-[34px] rounded-full flex items-center justify-center transition-colors ${
               isDarkTheme ? 'bg-[#1C1A17] text-[#A39E98]' : 'bg-[#EFEAE4] text-[#5D5750]'
             }`}
             title="Settings"
@@ -308,12 +436,10 @@ export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
         {/* SVG Concentric Rings */}
         <div className="relative w-[112px] h-[112px] flex items-center justify-center flex-shrink-0">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-            {/* Background tracks */}
             <circle cx="50" cy="50" r="42" fill="none" stroke={isDarkTheme ? '#24211E' : '#EFEAE4'} strokeWidth="5" />
             <circle cx="50" cy="50" r="34" fill="none" stroke={isDarkTheme ? '#24211E' : '#EFEAE4'} strokeWidth="5" />
             <circle cx="50" cy="50" r="26" fill="none" stroke={isDarkTheme ? '#24211E' : '#EFEAE4'} strokeWidth="5" />
 
-            {/* Outer Ring: Routines (1 of 4 = 25%) */}
             <circle
               cx="50" cy="50" r="42"
               fill="none"
@@ -323,7 +449,6 @@ export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
               strokeDashoffset={2 * Math.PI * 42 * (1 - 0.25)}
               strokeLinecap="round"
             />
-            {/* Middle Ring: Tasks (2 of 7 = 28.5%) */}
             <circle
               cx="50" cy="50" r="34"
               fill="none"
@@ -333,7 +458,6 @@ export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
               strokeDashoffset={2 * Math.PI * 34 * (1 - 0.285)}
               strokeLinecap="round"
             />
-            {/* Inner Ring: Habits (4 of 5 = 80%) */}
             <circle
               cx="50" cy="50" r="26"
               fill="none"
@@ -345,7 +469,6 @@ export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
             />
           </svg>
 
-          {/* Center readout */}
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
             <span className="text-[19px] font-bold leading-none tnum">44%</span>
             <span className={`text-[10px] mt-0.5 ${isDarkTheme ? 'text-[#A39E98]' : 'text-[#5D5750]'}`}>
@@ -354,7 +477,6 @@ export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
           </div>
         </div>
 
-        {/* Legend stats on right */}
         <div className="space-y-2.5 pr-2">
           <div className="flex items-center gap-2">
             <span className={`w-2.5 h-2.5 rounded-full ${isDarkTheme ? 'bg-[#4ADE80]' : 'bg-[#16A34A]'}`} />
@@ -388,7 +510,44 @@ export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
         </div>
       </div>
 
-      {/* Up next Card (7-Minute Reset Workout) */}
+      {/* Routine Presets Quick Launcher Bar */}
+      <div className="mb-3">
+        <div className="flex items-center justify-between mb-2 px-1">
+          <span className="text-[14px] font-bold">Routine Presets</span>
+          <button
+            onClick={() => setShowTemplateModal(true)}
+            className={`text-[12px] font-semibold ${isDarkTheme ? 'text-[#D9A184]' : 'text-[#8F4C2B]'}`}
+          >
+            See all 10 →
+          </button>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          {ALL_ROUTINE_PRESETS.slice(0, 3).map((preset) => (
+            <div
+              key={preset.id}
+              onClick={() => startPreset(preset)}
+              className={`p-2.5 rounded-[18px] border cursor-pointer transition-transform active:scale-95 flex flex-col justify-between ${
+                isDarkTheme
+                  ? 'bg-[#141211] border-[#2E2A27] hover:border-[#D9A184]'
+                  : 'bg-[#FFFFFF] border-[rgba(26,22,20,0.13)] hover:border-[#8F4C2B] shadow-2xs'
+              }`}
+            >
+              <div>
+                <span className="text-xl block mb-1">{preset.icon}</span>
+                <span className="text-[12px] font-bold block leading-tight truncate">
+                  {preset.name}
+                </span>
+              </div>
+              <span className={`text-[10px] mt-1 block ${isDarkTheme ? 'text-[#A39E98]' : 'text-[#5D5750]'}`}>
+                {preset.durationLabel}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Up next Card (Active routine card) */}
       <div
         className={`p-4 rounded-[26px] mb-3 border flex items-center justify-between transition-transform ${
           isDarkTheme
@@ -401,10 +560,10 @@ export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
             Up next · in 147 min · 17:30
           </span>
           <h3 className="text-[17px] font-bold leading-snug font-serif mt-0.5">
-            7-Minute Reset Workout
+            {activeRoutine.icon} {activeRoutine.name}
           </h3>
           <span className="text-[12px] opacity-80 block">
-            14 min
+            {activeRoutine.durationLabel} · {activeRoutine.stepsCount} steps
           </span>
         </div>
 
@@ -419,7 +578,6 @@ export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
 
       {/* Two Stat Cards (Focus today & Routine streak) */}
       <div className="grid grid-cols-2 gap-2.5 mb-4">
-        {/* Focus today */}
         <div
           className={`p-3.5 rounded-[24px] border ${
             isDarkTheme ? 'bg-[#141211] border-[#2E2A27]' : 'bg-[#FFFFFF] border-[rgba(26,22,20,0.13)] shadow-xs'
@@ -445,7 +603,6 @@ export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
           </button>
         </div>
 
-        {/* Routine streak */}
         <div
           className={`p-3.5 rounded-[24px] border ${
             isDarkTheme ? 'bg-[#141211] border-[#2E2A27]' : 'bg-[#FFFFFF] border-[rgba(26,22,20,0.13)] shadow-xs'
@@ -509,7 +666,7 @@ export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
           </span>
         </div>
 
-        {/* Task 2 (High Priority with red checkbox ring) */}
+        {/* Task 2 */}
         <div
           onClick={() => toggleTask('task_prs')}
           className={`p-3.5 rounded-[22px] border flex items-center justify-between cursor-pointer transition-all ${
@@ -539,69 +696,65 @@ export const RoutinesScreen: React.FC<RoutinesScreenProps> = ({
             High
           </span>
         </div>
-
-        {/* Task 3 (High Priority) */}
-        <div
-          onClick={() => toggleTask('task_roadmap')}
-          className={`p-3.5 rounded-[22px] border flex items-center justify-between cursor-pointer transition-all ${
-            isDarkTheme ? 'bg-[#141211] border-[#2E2A27]' : 'bg-[#FFFFFF] border-[rgba(26,22,20,0.13)] shadow-xs'
-          }`}
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-              taskStates.task_roadmap
-                ? 'bg-[#E05D5D] border-[#E05D5D] text-white'
-                : 'border-[#E05D5D]'
-            }`}>
-              {taskStates.task_roadmap && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-            </div>
-            <div className="min-w-0">
-              <span className={`text-[13px] font-semibold block leading-tight truncate ${taskStates.task_roadmap ? 'line-through opacity-50' : ''}`}>
-                Finalize Q4 roadmap proposal & key deliverables
-              </span>
-              <span className={`text-[11px] ${isDarkTheme ? 'text-[#A39E98]' : 'text-[#5D5750]'}`}>
-                2:30 pm
-              </span>
-            </div>
-          </div>
-          <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full flex-shrink-0 ${
-            isDarkTheme ? 'bg-[#2C1414] text-[#E05D5D]' : 'bg-[#FEE2E2] text-[#C0504D]'
-          }`}>
-            High
-          </span>
-        </div>
-
-        {/* Task 4 */}
-        <div
-          onClick={() => toggleTask('task_walk')}
-          className={`p-3.5 rounded-[22px] border flex items-center justify-between cursor-pointer transition-all ${
-            isDarkTheme ? 'bg-[#141211] border-[#2E2A27]' : 'bg-[#FFFFFF] border-[rgba(26,22,20,0.13)] shadow-xs'
-          }`}
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <div className={`w-[22px] h-[22px] rounded-full border flex items-center justify-center flex-shrink-0 ${
-              taskStates.task_walk
-                ? (isDarkTheme ? 'bg-[#D9A184] border-[#D9A184] text-[#0A0908]' : 'bg-[#8F4C2B] border-[#8F4C2B] text-white')
-                : (isDarkTheme ? 'border-[#3E3A36]' : 'border-[rgba(26,22,20,0.2)]')
-            }`}>
-              {taskStates.task_walk && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-            </div>
-            <div className="min-w-0">
-              <span className={`text-[13px] font-semibold block leading-tight truncate ${taskStates.task_walk ? 'line-through opacity-50' : ''}`}>
-                30-min evening recovery walk
-              </span>
-              <span className={`text-[11px] ${isDarkTheme ? 'text-[#A39E98]' : 'text-[#5D5750]'}`}>
-                7:00 pm
-              </span>
-            </div>
-          </div>
-          <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full flex-shrink-0 ${
-            isDarkTheme ? 'bg-[#2A1C16] text-[#D9A184]' : 'bg-[#F7EBE3] text-[#8F4C2B]'
-          }`}>
-            Medium
-          </span>
-        </div>
       </div>
+
+      {/* Preset Picker Modal Overlay */}
+      {showTemplateModal && (
+        <div className="absolute inset-0 bg-black/65 z-50 flex flex-col justify-end backdrop-blur-xs animate-in fade-in duration-200">
+          <div
+            className={`p-4 rounded-t-[28px] max-h-[82%] overflow-y-auto reflex-scrollbar border-t ${
+              isDarkTheme ? 'bg-[#141211] border-[#2E2A27]' : 'bg-[#FFFFFF] border-[rgba(26,22,20,0.13)] shadow-2xl'
+            }`}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-700/15 mb-3">
+              <div>
+                <h3 className="text-[17px] font-bold">Routine Presets</h3>
+                <span className={`text-[11px] ${isDarkTheme ? 'text-[#A39E98]' : 'text-[#5D5750]'}`}>
+                  Choose a template to start immediately
+                </span>
+              </div>
+              <button
+                onClick={() => setShowTemplateModal(false)}
+                className={`p-1.5 rounded-full ${isDarkTheme ? 'bg-[#1C1A17] text-[#A39E98]' : 'bg-[#EFEAE4] text-[#5D5750]'}`}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2.5">
+              {ALL_ROUTINE_PRESETS.map((preset) => (
+                <div
+                  key={preset.id}
+                  onClick={() => startPreset(preset)}
+                  className={`p-3 rounded-[20px] border cursor-pointer transition-all flex items-center justify-between ${
+                    isDarkTheme
+                      ? 'bg-[#1C1A17] border-[#2E2A27] hover:border-[#D9A184]'
+                      : 'bg-[#F9F7F5] border-[rgba(26,22,20,0.1)] hover:border-[#8F4C2B]'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0 pr-2">
+                    <span className="text-2xl">{preset.icon}</span>
+                    <div className="min-w-0">
+                      <span className="text-[13px] font-bold block truncate">{preset.name}</span>
+                      <span className={`text-[11px] block line-clamp-1 ${isDarkTheme ? 'text-[#A39E98]' : 'text-[#5D5750]'}`}>
+                        {preset.description}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <span className={`text-[11px] font-medium block ${isDarkTheme ? 'text-[#D9A184]' : 'text-[#8F4C2B]'}`}>
+                      {preset.durationLabel}
+                    </span>
+                    <span className={`text-[10px] opacity-75 block`}>
+                      {preset.stepsCount} steps
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

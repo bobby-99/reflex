@@ -137,26 +137,34 @@ export const HeroAndStory: React.FC<HeroAndStoryProps> = ({
 }) => {
   const userInteractedRef = useRef<boolean>(false);
   const userInteractTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [mobilePhoneScale, setMobilePhoneScale] = useState<number>(0.66);
+  const [mobilePhoneScale, setMobilePhoneScale] = useState<number>(0.52);
+  const [desktopPhoneScale, setDesktopPhoneScale] = useState<number>(0.68);
 
-  // Responsive scale for mobile phone based on browser viewport height and width
+  // Responsive scale for phone based on browser viewport height and width
   useEffect(() => {
-    const updateMobileScale = () => {
+    const updateScales = () => {
       if (typeof window === 'undefined') return;
       const vh = window.innerHeight;
       const vw = window.innerWidth;
-      // Target max height ~64vh on mobile so the entire phone + bottom navigation stays in view
-      const maxAvailableHeight = vh * 0.64;
-      const maxAvailableWidth = Math.min(vw - 32, 350);
-      const scaleByH = maxAvailableHeight / 820;
-      const scaleByW = maxAvailableWidth / 380;
-      const responsiveScale = Math.max(0.46, Math.min(0.72, Math.min(scaleByH, scaleByW)));
-      setMobilePhoneScale(responsiveScale);
+
+      // Mobile phone scaling (max height ~60vh, max width ~330px)
+      const maxMobileH = vh * 0.58;
+      const maxMobileW = Math.min(vw - 32, 330);
+      const mScaleH = maxMobileH / 820;
+      const mScaleW = maxMobileW / 380;
+      const responsiveMobile = Math.max(0.44, Math.min(0.56, Math.min(mScaleH, mScaleW)));
+      setMobilePhoneScale(responsiveMobile);
+
+      // Desktop phone scaling (comfortably fits on laptops 720p - 1080p without overflowing)
+      const maxDesktopH = vh * 0.72;
+      const dScaleH = maxDesktopH / 820;
+      const responsiveDesktop = Math.max(0.56, Math.min(0.70, dScaleH));
+      setDesktopPhoneScale(responsiveDesktop);
     };
 
-    updateMobileScale();
-    window.addEventListener('resize', updateMobileScale);
-    return () => window.removeEventListener('resize', updateMobileScale);
+    updateScales();
+    window.addEventListener('resize', updateScales);
+    return () => window.removeEventListener('resize', updateScales);
   }, []);
 
   // Allow visitor direct interaction with the phone without scroll fighting
@@ -455,6 +463,84 @@ export const HeroAndStory: React.FC<HeroAndStoryProps> = ({
                       ))}
                     </div>
 
+                    {/* Presets Showcase within feature-routines */}
+                    {sec.id === 'feature-routines' && (
+                      <div className="mb-6 pt-2 border-t border-neutral-700/15">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-[13px] font-bold tracking-tight">
+                            Built-in Presets
+                          </span>
+                          <span className={`text-[11px] ${isDarkTheme ? 'text-[#D9A184]' : 'text-[#8F4C2B]'}`}>
+                            10 structured routines
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                          <div
+                            onClick={() => {
+                              onTriggerRoutineStart('morning_routine');
+                              handleUserSelectTab('routines');
+                            }}
+                            className={`p-3 rounded-[20px] border cursor-pointer transition-all hover:scale-[1.02] ${
+                              isDarkTheme
+                                ? 'bg-[#1C1A17] border-[#2E2A27] hover:border-[#D9A184]'
+                                : 'bg-[#F9F7F5] border-[rgba(26,22,20,0.1)] hover:border-[#8F4C2B] shadow-2xs'
+                            }`}
+                          >
+                            <div className="text-xl mb-1">☀️</div>
+                            <div className="text-[13px] font-bold leading-tight">Morning Routine</div>
+                            <div className={`text-[11px] mt-1 ${isDarkTheme ? 'text-[#A39E98]' : 'text-[#5D5750]'}`}>
+                              6 steps · ~16 min
+                            </div>
+                            <div className={`text-[11px] font-semibold mt-2 ${isDarkTheme ? 'text-[#D9A184]' : 'text-[#8F4C2B]'}`}>
+                              Run on phone →
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => {
+                              onTriggerRoutineStart('deep_work_launch');
+                              handleUserSelectTab('routines');
+                            }}
+                            className={`p-3 rounded-[20px] border cursor-pointer transition-all hover:scale-[1.02] ${
+                              isDarkTheme
+                                ? 'bg-[#1C1A17] border-[#2E2A27] hover:border-[#D9A184]'
+                                : 'bg-[#F9F7F5] border-[rgba(26,22,20,0.1)] hover:border-[#8F4C2B] shadow-2xs'
+                            }`}
+                          >
+                            <div className="text-xl mb-1">⚡</div>
+                            <div className="text-[13px] font-bold leading-tight">Deep Work Launch</div>
+                            <div className={`text-[11px] mt-1 ${isDarkTheme ? 'text-[#A39E98]' : 'text-[#5D5750]'}`}>
+                              7 steps · ~5 min
+                            </div>
+                            <div className={`text-[11px] font-semibold mt-2 ${isDarkTheme ? 'text-[#D9A184]' : 'text-[#8F4C2B]'}`}>
+                              Run on phone →
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => {
+                              onTriggerRoutineStart('workout_circuit');
+                              handleUserSelectTab('routines');
+                            }}
+                            className={`p-3 rounded-[20px] border cursor-pointer transition-all hover:scale-[1.02] ${
+                              isDarkTheme
+                                ? 'bg-[#1C1A17] border-[#2E2A27] hover:border-[#D9A184]'
+                                : 'bg-[#F9F7F5] border-[rgba(26,22,20,0.1)] hover:border-[#8F4C2B] shadow-2xs'
+                            }`}
+                          >
+                            <div className="text-xl mb-1">🏃</div>
+                            <div className="text-[13px] font-bold leading-tight">7-Min Workout</div>
+                            <div className={`text-[11px] mt-1 ${isDarkTheme ? 'text-[#A39E98]' : 'text-[#5D5750]'}`}>
+                              6 steps · ~6 min
+                            </div>
+                            <div className={`text-[11px] font-semibold mt-2 ${isDarkTheme ? 'text-[#D9A184]' : 'text-[#8F4C2B]'}`}>
+                              Run on phone →
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Interactive Button */}
                     <button
                       onClick={() => handleUserSelectTab(sec.tab)}
@@ -511,7 +597,7 @@ export const HeroAndStory: React.FC<HeroAndStoryProps> = ({
                 themeMode={themeMode}
                 onThemeChange={onThemeChange}
                 isDarkTheme={isDarkTheme}
-                scale={0.88}
+                scale={desktopPhoneScale}
                 presetQuickAddText={presetQuickAddText}
                 onClearPresetQuickAdd={onClearPresetQuickAdd}
                 autoStartRoutineId={autoStartRoutineId}

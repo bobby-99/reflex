@@ -193,11 +193,12 @@ export const FocusScreen: React.FC<FocusScreenProps> = ({
         <div className="flex-1 flex flex-col items-center justify-center text-center my-4">
           <LiquidTimerCanvas
             fillRatio={fillRatio}
-            phaseLabel={isFlow ? (flowSubMode === 'timed' ? 'Timed flow' : 'Open flow') : 'Focus'}
+            phaseLabel={isFlow ? (flowSubMode === 'timed' ? 'Timed flow' : 'Open flow') : (currentPhase === 'break' ? 'Break' : 'Focus')}
             timeReadout={formatTimer(currentSessionSec)}
             statusCaption={isPaused ? 'Paused' : 'Running'}
             isDarkTheme={isDarkTheme}
             isRunning={!isPaused}
+            isBreak={currentPhase === 'break'}
             size={230}
             variant={isFlow ? 'flow' : 'pomodoro'}
           />
@@ -458,19 +459,18 @@ export const FocusScreen: React.FC<FocusScreenProps> = ({
             ))}
           </div>
 
-          {/* Hero Circular Ready Display */}
+          {/* Hero Liquid Sphere Ready Display */}
           <div className="flex flex-col items-center justify-center my-3">
-            <div
-              className={`w-[188px] h-[188px] rounded-full flex flex-col items-center justify-center shadow-lg transition-transform ${
-                isDarkTheme ? 'bg-[#D9A184] text-[#0A0908]' : 'bg-[#8F4C2B] text-white'
-              }`}
-            >
-              <span className="text-[13px] font-medium opacity-85">Focus</span>
-              <span className="text-[44px] font-bold leading-none my-1 font-serif tnum">
-                {focusLengthMin}:00
-              </span>
-              <span className="text-[12px] font-medium opacity-85">Ready</span>
-            </div>
+            <LiquidTimerCanvas
+              fillRatio={1.0}
+              phaseLabel="Focus"
+              timeReadout={`${focusLengthMin}:00`}
+              statusCaption="Ready"
+              isDarkTheme={isDarkTheme}
+              isRunning={false}
+              size={188}
+              variant="pomodoro"
+            />
 
             {/* Cycle Dash Segments (4 copper, 3 sage green) */}
             <div className="w-full max-w-[280px] my-3">

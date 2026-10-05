@@ -8,6 +8,7 @@ interface LiquidTimerCanvasProps {
   isDarkTheme: boolean;
   isRunning: boolean;
   size?: number;
+  isBreak?: boolean;
   variant?: 'pomodoro' | 'flow';
 }
 
@@ -19,6 +20,7 @@ export const LiquidTimerCanvas: React.FC<LiquidTimerCanvasProps> = ({
   isDarkTheme,
   isRunning,
   size = 190,
+  isBreak = false,
   variant = 'pomodoro',
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -26,9 +28,9 @@ export const LiquidTimerCanvas: React.FC<LiquidTimerCanvasProps> = ({
   const isVisibleRef = useRef<boolean>(true);
   const animFrameRef = useRef<number | null>(null);
   const phaseRef = useRef<number>(0);
+  const lastTimeRef = useRef<number>(0);
 
   useEffect(() => {
-    // Visibility observer to pause RAF when off-screen
     const observer = new IntersectionObserver(
       ([entry]) => {
         isVisibleRef.current = entry.isIntersecting;
@@ -60,123 +62,153 @@ export const LiquidTimerCanvas: React.FC<LiquidTimerCanvasProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let lastTime = performance.now();
+    lastTimeRef.current = performance.now();
 
     const render = (now: number) => {
-      const dt = (now - lastTime) / 1000;
-      lastTime = now;
+      const dt = Math.min((now - (lastTimeRef.current || now)) / 1000, 0.1);
+      lastTimeRef.current = now;
 
       if (isVisibleRef.current) {
-        // Advance wave phase: faster when running, gentle drift when idle
-        const speed = isRunning ? 2.4 : 1.1;
-        phaseRef.current += speed * dt;
+        // Phase progression matches reference: faster when running, gentle drift when idle
+        const speed = isRunning ? (variant === 'flow' ? 2.6 : 2.4) : (variant === 'flow' ? 1.3 : 1.1);
+        phaseRef.current += dt * speed;
 
         const dpr = window.devicePixelRatio || 1;
-        const w = size;
-        const h = size;
+        const S = size;
 
-        // Ensure canvas internal resolution matches device pixel ratio
-        if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
-          canvas.width = w * dpr;
-          canvas.height = h * dpr;
+        if (canvas.width !== Math.round(S * dpr) || canvas.height !== Math.round(S * dpr)) {
+          canvas.width = Math.round(S * dpr);
+          canvas.height = Math.round(S * dpr);
+          canvas.style.width = `${S}px`;
+          canvas.style.height = `${S}px`;
         }
 
-        ctx.save();
-        ctx.scale(dpr, dpr);
-        ctx.clearRect(0, 0, w, h);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, S, S);
 
-        const cx = w / 2;
-        const cy = h / 2;
-        const radius = (w / 2) - 8;
+        // Exact Design System & Reference Tokens
+        const surfaceCol = isDarkTheme ? '#141211' : '#FFFFFF';
+        const borderCol = isDarkTheme ? '#2E2A27' : 'rgba(26, 22, 20, 0.08)';
+        const inkCol = isDarkTheme ? '#F5F2EF' : '#1A1614';
+        const onlCol = isDarkTheme ? '#0A0908' : '#FFFFFF';
+        const topCol = isBreak
+          ? (isDarkTheme ? '#A6D8BF' : '#7FB39A')
+          : (isDarkTheme ? '#E1AD93' : '#C98460');
+        const botCol = isBreak
+          ? (isDarkTheme ? '#5E9C7E' : '#4F8A6B')
+          : (isDarkTheme ? '#B57E63' : '#A5623F');
+        const glareCol = isDarkTheme ? 'rgba(255, 255, 255, 0.22)' : 'rgba(255, 255, 255, 0.55)';
 
-        // 1. Outer Glass Sphere Background
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-        ctx.fillStyle = isDarkTheme ? 'rgba(28, 26, 23, 0.72)' : 'rgba(255, 255, 255, 0.85)';
-        ctx.fill();
+        const cx = S / 2;
+        const cy = S / 2;
+        const r = S / 2 - 4;
+        const ratio = Math.max(0, Math.min(1, fillRatio));
 
-        // 2. Liquid Waves clipped to the inner circle
-        ctx.clip();
+        // Exact fluid wave mechanics from reference
+        const amp = S * 0.02 * Math.min(1, ratio * 8);
+        const level = (cy + r + amp * 3) - ratio * (2 * r + amp * 6);
+        const tilt = Math.sin(now / 1100) * amp * 0.55;
+        const k = (Math.PI * 2) / (S * 0.85);
 
-        // Clamp fill height: 0.0 means empty bottom, 1.0 means full top
-        const clampedFill = Math.max(0.04, Math.min(0.96, fillRatio));
-        const fillY = cy + radius - (clampedFill * 2 * radius);
-        const amp = isRunning ? (variant === 'flow' ? 8.5 : 7) : (variant === 'flow' ? 5.5 : 4.5);
-        const freq = variant === 'flow' ? 0.032 : 0.038;
-
-        const getWaveY = (x: number, isBack: boolean) => {
-          if (variant === 'flow') {
-            const p = isBack ? phaseRef.current + Math.PI * 0.75 : phaseRef.current;
-            const w1 = amp * Math.sin(freq * 1.15 * x + p);
-            const w2 = (amp * 0.4) * Math.sin(freq * 2.2 * x - p * 0.7);
-            const w3 = (amp * 0.2) * Math.cos(freq * 0.6 * x + p * 1.3);
-            return fillY + w1 + w2 + w3;
+        const wave = (ph: number, a: number, off: number) => {
+          ctx.beginPath();
+          for (let x = cx - r - 2; x <= cx + r + 2; x += 4) {
+            const y = level + off + a * Math.sin(x * k + ph) + a * 0.3 * Math.sin(x * k * 2.1 - ph * 1.3) + tilt * (x - cx) / r;
+            if (x === cx - r - 2) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
           }
-          return fillY + amp * Math.sin(freq * x + phaseRef.current + (isBack ? Math.PI * 0.7 : 0));
+          ctx.lineTo(cx + r + 2, cy + r + 6);
+          ctx.lineTo(cx - r - 2, cy + r + 6);
+          ctx.closePath();
         };
 
-        // Layer 1: Back Wave (slightly darker copper tone)
-        ctx.beginPath();
-        ctx.moveTo(0, h);
-        for (let x = 0; x <= w; x += 3) {
-          ctx.lineTo(x, getWaveY(x, true));
-        }
-        ctx.lineTo(w, h);
-        ctx.closePath();
-        ctx.fillStyle = isDarkTheme ? 'rgba(181, 126, 99, 0.45)' : 'rgba(143, 76, 43, 0.35)';
+        const circ = () => {
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        };
+
+        // 1. Sphere background & border
+        circ();
+        ctx.fillStyle = surfaceCol;
         ctx.fill();
-
-        // Layer 2: Front Wave (bright metallic copper)
-        ctx.beginPath();
-        ctx.moveTo(0, h);
-        for (let x = 0; x <= w; x += 3) {
-          ctx.lineTo(x, getWaveY(x, false));
-        }
-        ctx.lineTo(w, h);
-        ctx.closePath();
-
-        const grad = ctx.createLinearGradient(0, fillY - 10, 0, h);
-        if (isDarkTheme) {
-          grad.addColorStop(0, '#D9A184');
-          grad.addColorStop(1, '#945A3C');
-        } else {
-          grad.addColorStop(0, '#8F4C2B');
-          grad.addColorStop(1, '#5E311B');
-        }
-        ctx.fillStyle = grad;
-        ctx.fill();
-
-        // Wave crest highlight rim
-        ctx.beginPath();
-        for (let x = 0; x <= w; x += 3) {
-          const y = getWaveY(x, false);
-          if (x === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.strokeStyle = isDarkTheme ? 'rgba(255, 240, 230, 0.45)' : 'rgba(255, 255, 255, 0.6)';
         ctx.lineWidth = 1.5;
+        ctx.strokeStyle = borderCol;
         ctx.stroke();
 
-        ctx.restore(); // Exit clip
+        // 2. Liquid fill with dual waves
+        const g = ctx.createLinearGradient(0, level - amp, 0, cy + r);
+        g.addColorStop(0, topCol);
+        g.addColorStop(1, botCol);
 
-        // 3. Glass Sphere Hairline Rim & Subtle Specular Highlight
-        ctx.beginPath();
-        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-        ctx.strokeStyle = isDarkTheme ? 'rgba(217, 161, 132, 0.32)' : 'rgba(143, 76, 43, 0.28)';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
+        ctx.save();
+        circ();
+        ctx.clip();
 
-        // Inner shadow / vignette
-        const innerGrad = ctx.createRadialGradient(cx, cy, radius * 0.7, cx, cy, radius);
-        innerGrad.addColorStop(0, 'rgba(0,0,0,0)');
-        innerGrad.addColorStop(1, isDarkTheme ? 'rgba(0,0,0,0.35)' : 'rgba(0,0,0,0.08)');
-        ctx.beginPath();
-        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-        ctx.fillStyle = innerGrad;
+        // Back wave (semi-transparent)
+        ctx.globalAlpha = 0.5;
+        wave(phaseRef.current + 1.8, amp * 1.2, amp * 0.4);
+        ctx.fillStyle = g;
+        ctx.fill();
+
+        // Front wave (full opacity)
+        ctx.globalAlpha = 1.0;
+        wave(phaseRef.current, amp, 0);
+        ctx.fillStyle = g;
         ctx.fill();
 
         ctx.restore();
+
+        // 3. Tabular Typography with exact dual-tone clipping
+        const fs = Math.round(S * 0.26);
+        const lf = Math.round(Math.max(12, S * 0.055));
+        const df = `700 ${fs}px Lora, Georgia, serif`;
+        ctx.font = df;
+
+        let cell = 0;
+        for (const d of '0123456789') {
+          cell = Math.max(cell, ctx.measureText(d).width);
+        }
+        const colon = ctx.measureText(':').width;
+        const str = timeReadout;
+        const totalTextWidth = [...str].reduce((a, c) => a + (c === ':' ? colon : cell), 0);
+
+        const paintText = (col: string) => {
+          ctx.fillStyle = col;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.font = df;
+          let x = cx - totalTextWidth / 2;
+          for (const ch of str) {
+            const w = ch === ':' ? colon : cell;
+            ctx.fillText(ch, x + w / 2, cy);
+            x += w;
+          }
+          ctx.font = `500 ${lf}px Lora, Georgia, serif`;
+          ctx.globalAlpha = 0.85;
+          ctx.fillText(phaseLabel, cx, cy - fs * 0.78);
+          ctx.fillText(statusCaption, cx, cy + fs * 0.78);
+          ctx.globalAlpha = 1.0;
+        };
+
+        // Pass 1: Draw text on top of base surface in ink color
+        paintText(inkCol);
+
+        // Pass 2: Clip to the water wave and re-paint text in onl (contrast color)
+        ctx.save();
+        circ();
+        ctx.clip();
+        wave(phaseRef.current, amp, 0);
+        ctx.clip();
+        paintText(onlCol);
+        ctx.restore();
+
+        // 4. Glare crescent arc on top-left rim
+        ctx.beginPath();
+        ctx.arc(cx, cy, r - 9, Math.PI * 1.08, Math.PI * 1.38);
+        ctx.strokeStyle = glareCol;
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.stroke();
       }
 
       animFrameRef.current = requestAnimationFrame(render);
@@ -189,7 +221,7 @@ export const LiquidTimerCanvas: React.FC<LiquidTimerCanvasProps> = ({
         cancelAnimationFrame(animFrameRef.current);
       }
     };
-  }, [fillRatio, isDarkTheme, isRunning, size, variant]);
+  }, [fillRatio, isBreak, isDarkTheme, isRunning, phaseLabel, size, statusCaption, timeReadout, variant]);
 
   return (
     <div
@@ -202,34 +234,6 @@ export const LiquidTimerCanvas: React.FC<LiquidTimerCanvasProps> = ({
         style={{ width: size, height: size }}
         className="block"
       />
-
-      {/* Central Readable Readout Overlay (Positioned with CSS for absolute accessibility) */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none px-4">
-        <span
-          className={`text-[12px] font-medium tracking-wide transition-colors ${
-            isDarkTheme ? 'text-[#F5F2EF]/90' : 'text-[#1A1614]/90'
-          }`}
-          style={{ textShadow: isDarkTheme ? '0 1px 3px rgba(0,0,0,0.85)' : '0 1px 2px rgba(255,255,255,0.85)' }}
-        >
-          {phaseLabel}
-        </span>
-        <span
-          className={`text-[36px] font-bold leading-none my-1 tracking-tight tnum transition-colors ${
-            isDarkTheme ? 'text-[#FFFFFF]' : 'text-[#1A1614]'
-          }`}
-          style={{ textShadow: isDarkTheme ? '0 2px 6px rgba(0,0,0,0.9)' : '0 1px 3px rgba(255,255,255,0.9)' }}
-        >
-          {timeReadout}
-        </span>
-        <span
-          className={`text-[11px] font-medium transition-colors ${
-            isDarkTheme ? 'text-[#D9A184]' : 'text-[#8F4C2B]'
-          }`}
-          style={{ textShadow: isDarkTheme ? '0 1px 2px rgba(0,0,0,0.8)' : '0 1px 1px rgba(255,255,255,0.8)' }}
-        >
-          {statusCaption}
-        </span>
-      </div>
     </div>
   );
 };
