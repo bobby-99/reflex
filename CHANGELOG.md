@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2026-10-06
+
+### Added
+- **Expanded Routine Presets**: Added 5 new production presets (Deep Work Launch, Desk Break, Mobility Flow, Evening Shutdown, Weekly Review) alongside the original 5, featuring schedule-aware streaks (daily, weekdays, Sunday) and accurate dynamic duration calculations.
+- **In-App Community Support**: Added warm, low-pressure "Star on GitHub" and "Support on Ko-fi" links under Settings → About, fully preserving the 100% offline guarantee without internet permissions.
+- **Live Search Indexing**: Settings search now indexes "support", "donate", "tip", "star", "github", and "ko-fi".
+
+### Changed
+- **Website & Showcase**: High-res Play Store app icon adopted for favicon, metadata, and GitHub README; website phone preview navigation bar polished with real-time frosted glass backdrop blur matching the app.
+- **CI / CD Pipeline**: Modernized GitHub Actions CI test matrix to run rock-solid automated instrumented tests without hypervisor emulation errors.
+
+---
+
 ## [1.0.1] - 2026-10-05
 
 ### Added
