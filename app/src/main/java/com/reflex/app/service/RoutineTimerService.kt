@@ -402,12 +402,18 @@ class RoutineTimerService : Service() {
                 SoundCuePlayer.playTingChime()
             }
             if (vibEnabled) {
-                val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    vibrator.vibrate(VibrationEffect.createOneShot(200L, VibrationEffect.DEFAULT_AMPLITUDE))
+                val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    val vibratorManager = getSystemService(android.os.VibratorManager::class.java)
+                    vibratorManager?.defaultVibrator
                 } else {
                     @Suppress("DEPRECATION")
-                    vibrator.vibrate(200L)
+                    getSystemService(VIBRATOR_SERVICE) as? Vibrator
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    vibrator?.vibrate(VibrationEffect.createOneShot(200L, VibrationEffect.DEFAULT_AMPLITUDE))
+                } else {
+                    @Suppress("DEPRECATION")
+                    vibrator?.vibrate(200L)
                 }
             }
         } catch (e: Exception) {

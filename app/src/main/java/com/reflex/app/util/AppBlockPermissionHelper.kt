@@ -13,8 +13,9 @@ import android.provider.Telephony
 object AppBlockPermissionHelper {
 
     fun hasUsageAccessPermission(context: Context): Boolean {
-        val appOpsManager = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+        val appOpsManager = context.getSystemService(Context.APP_OPS_SERVICE) as? AppOpsManager ?: return false
         val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            @Suppress("DEPRECATION")
             appOpsManager.unsafeCheckOpNoThrow(
                 AppOpsManager.OPSTR_GET_USAGE_STATS,
                 Process.myUid(),

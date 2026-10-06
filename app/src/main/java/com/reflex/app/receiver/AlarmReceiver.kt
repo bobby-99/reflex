@@ -31,7 +31,7 @@ class AlarmReceiver : BroadcastReceiver() {
                                     try {
                                         val powerManager = context.getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager
                                         val wakeLock = powerManager?.newWakeLock(
-                                            android.os.PowerManager.PARTIAL_WAKE_LOCK or android.os.PowerManager.ACQUIRE_CAUSES_WAKEUP,
+                                            android.os.PowerManager.PARTIAL_WAKE_LOCK,
                                             "Reflex:PriorityTaskAlertWakeLock"
                                         )
                                         wakeLock?.acquire(10000L) // 10 seconds

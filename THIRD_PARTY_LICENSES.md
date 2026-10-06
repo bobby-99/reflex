@@ -17,6 +17,17 @@ This Font Software is licensed under the SIL Open Font License, Version 1.1.
 This license is available with a FAQ at: http://scripts.sil.org/OFL
 ```
 
+### Nunito Font Family
+- **Source**: [Google Fonts / Vernon Adams](https://fonts.google.com/specimen/Nunito)
+- **Author**: Vernon Adams, Cyreal, Jacques Le Bailly
+- **License**: [SIL Open Font License, Version 1.1](https://scripts.sil.org/OFL)
+
+```text
+Copyright 2014 The Nunito Project Authors (https://github.com/googlefonts/nunito)
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+This license is available with a FAQ at: http://scripts.sil.org/OFL
+```
+
 ---
 
 ## Assets and Icons

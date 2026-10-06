@@ -126,7 +126,13 @@ fun RunningFocusScreen(
                 com.reflex.app.util.SoundCuePlayer.playTingChime()
             }
             if (vibEnabled) {
-                val vibrator = context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? android.os.Vibrator
+                val vibrator = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                    val vibratorManager = context.getSystemService(android.os.VibratorManager::class.java)
+                    vibratorManager?.defaultVibrator
+                } else {
+                    @Suppress("DEPRECATION")
+                    context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? android.os.Vibrator
+                }
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     vibrator?.vibrate(android.os.VibrationEffect.createOneShot(200L, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
                 } else {

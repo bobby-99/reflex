@@ -1,16 +1,16 @@
 package com.reflex.app.data
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Brush
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.LocalDrink
-import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.Star
@@ -21,11 +21,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 enum class RoutineIcon(val key: String, val label: String, val icon: ImageVector) {
     BOLT("BOLT", "Bolt", Icons.Default.Bolt),
-    RUN("RUN", "Run", Icons.Default.DirectionsRun),
+    RUN("RUN", "Run", Icons.AutoMirrored.Filled.DirectionsRun),
     SUNNY("SUNNY", "Morning", Icons.Default.WbSunny),
     BEDTIME("BEDTIME", "Bedtime", Icons.Default.Bedtime),
     MEDITATE("MEDITATE", "Mind", Icons.Default.SelfImprovement),
-    BOOK("BOOK", "Read", Icons.Default.MenuBook),
+    BOOK("BOOK", "Read", Icons.AutoMirrored.Filled.MenuBook),
     HYDRATE("HYDRATE", "Water", Icons.Default.LocalDrink),
     FITNESS("FITNESS", "Gym", Icons.Default.FitnessCenter),
     CODE("CODE", "Code", Icons.Default.Code),

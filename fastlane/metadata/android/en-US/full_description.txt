@@ -1,13 +1,58 @@
-Reflex is a calm, local-first productivity assistant for Android designed around tactile design, frosted glass aesthetics, and absolute privacy.
+<b>Reflex</b> is a calm, local-first productivity companion designed to help you plan your day, stay consistent, and focus deeply—without ever connecting to the internet or uploading your private life to a cloud server.
 
-Features:
-• Step-by-step sequential routines with audio cues, confetti, and starter templates.
-• Smart tasks with priority levels (P1–P4), recurrence rules, and exact alarm notifications.
-• Daily habit tracking with numeric goals, annual contribution heatmaps, and streak statistics.
-• Deep focus timers with Pomodoro, interval, and open flow sessions, accompanied by ambient audio ticks.
-• Distraction shield with app blocking overlay to stay in flow.
-• Unified daily calendar linking routines, scheduled tasks, and device calendars.
-• 6 curated color themes based on Design System v1.0.
-• Complete data sovereignty: 100% offline Room database, no network permissions, and full JSON export/import.
+<b>Why Reflex?</b>
+Most productivity apps require an account, harvest telemetry, show ads, or charge monthly subscriptions. Reflex is different: it is 100% offline, privacy-first, free software under the GNU General Public License v3.0, and stores everything in a local SQLite database on your device.
 
-Reflex is free and open-source software licensed under GPL-3.0-or-later.
+<b>Core Features</b>
+
+<b>1. Sequential Routines</b>
+<ul>
+  <li>Chain together timed intervals, repetition targets, and check-off steps for workouts, morning routines, or desk breaks.</li>
+  <li>Step-by-step runner with gentle audio chimes and subtle haptic cues so you can execute routines without staring at your phone.</li>
+  <li>Built-in presets (Morning Routine, 7-Minute Workout, Deep Work Launch, Desk Break, Night Wind-Down) plus unlimited custom routines.</li>
+  <li>Grace-period streak calculation keeps momentum without punishing unavoidable misses.</li>
+</ul>
+
+<b>2. Natural Language Tasks</b>
+<ul>
+  <li>Type tasks naturally: <i>"Review design draft tomorrow 3pm !!!"</i>—Reflex automatically parses dates, times, and priority levels.</li>
+  <li>Floating quick capture and Quick Settings tile to jot down ideas from any application.</li>
+  <li>Swipe gestures for instant check-off with undo toast support.</li>
+</ul>
+
+<b>3. Atomic Habits</b>
+<ul>
+  <li>Track simple check-offs, measurable target counts (e.g., 8 glasses of water), or strict limit goals (e.g., maximum 2 coffees).</li>
+  <li>Monthly completion rate visualizer, current streaks, and best streak records.</li>
+  <li>Daily, weekday, or custom weekly frequency schedules.</li>
+</ul>
+
+<b>4. Liquid Focus & Pomodoro</b>
+<ul>
+  <li>Dynamic liquid physics timer for classic Pomodoro intervals (25/5), custom countdown blocks, or open-ended Zen flow.</li>
+  <li>Optional distraction barrier detects restricted apps during focus sessions and presents a gentle reminder to return to your work.</li>
+  <li>Link focus sessions directly to pending tasks.</li>
+</ul>
+
+<b>5. Unified Agenda & Calendar</b>
+<ul>
+  <li>Seamlessly combines local device calendar events, scheduled routines, and due tasks into a single chronological feed.</li>
+  <li>Interactive week strip and expandable monthly view.</li>
+  <li>Live sync with your device calendar via local Android Calendar Provider.</li>
+</ul>
+
+<b>Privacy & Permissions</b>
+Reflex requests zero internet access (no INTERNET permission in the app). Every requested Android permission serves a specific on-device function:
+<ul>
+  <li><b>Calendar:</b> Optional. Used only to read and display your local calendar events in the unified agenda timeline.</li>
+  <li><b>Microphone / Voice Input:</b> Optional. Used strictly when you tap the microphone button for on-device voice task dictation; audio is never recorded, saved, or transmitted.</li>
+  <li><b>Notifications & Alarms:</b> Used to trigger timely task reminders, habit nudges, and routine interval notifications via AlarmManager.</li>
+  <li><b>Foreground Service:</b> Ensures routine timers and focus countdowns remain accurate when your screen is locked.</li>
+  <li><b>Usage Access & Overlay:</b> Optional. Used strictly to detect opened distraction apps during active focus sessions and show the return barrier.</li>
+  <li><b>Boot Receiver:</b> Automatically reschedules your active alarms and reminders after device restarts.</li>
+</ul>
+
+<b>Data Ownership</b>
+Export and restore full plain-text JSON backups of your habits, routines, and tasks at any time.
+
+Reflex is free and open-source software (GPL-3.0-only). Source code: https://github.com/bobby-99/reflex

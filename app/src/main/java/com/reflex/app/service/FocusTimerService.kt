@@ -606,12 +606,18 @@ class FocusTimerService : Service() {
     private fun playCue(settings: FocusSettings) {
         if (settings.vibrationEnabled) {
             try {
-                val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    vibrator.vibrate(VibrationEffect.createOneShot(300L, VibrationEffect.DEFAULT_AMPLITUDE))
+                val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    val vibratorManager = getSystemService(android.os.VibratorManager::class.java)
+                    vibratorManager?.defaultVibrator
                 } else {
                     @Suppress("DEPRECATION")
-                    vibrator.vibrate(300L)
+                    getSystemService(VIBRATOR_SERVICE) as? Vibrator
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    vibrator?.vibrate(VibrationEffect.createOneShot(300L, VibrationEffect.DEFAULT_AMPLITUDE))
+                } else {
+                    @Suppress("DEPRECATION")
+                    vibrator?.vibrate(300L)
                 }
             } catch (e: Exception) {
                 com.reflex.app.util.AppLog.w("FocusTimerService", "Vibration alert error", e)

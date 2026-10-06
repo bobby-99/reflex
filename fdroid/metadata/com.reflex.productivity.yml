@@ -1,0 +1,22 @@
+Categories:
+  - Time
+License: GPL-3.0-only
+SourceCode: https://github.com/bobby-99/reflex
+IssueTracker: https://github.com/bobby-99/reflex/issues
+Donate: https://ko-fi.com/P5X2288QK6
+AutoName: Reflex
+RepoType: git
+Repo: https://github.com/bobby-99/reflex.git
+
+Builds:
+  - versionName: 1.0.0
+    versionCode: 1
+    commit: v1.0.0
+    subdir: app
+    gradle:
+      - yes
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: 1.0.0
+CurrentVersionCode: 1

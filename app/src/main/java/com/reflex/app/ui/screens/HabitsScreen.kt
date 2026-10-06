@@ -30,6 +30,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -46,7 +47,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.LocalFireDepartment
-import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.Settings
@@ -2349,7 +2349,7 @@ fun AddEditHabitSheet(
 
     val iconOptions = listOf(
         "check" to Icons.Default.Check,
-        "book" to Icons.Default.MenuBook,
+        "book" to Icons.AutoMirrored.Filled.MenuBook,
         "fitness" to Icons.Default.FitnessCenter,
         "water" to Icons.Default.WaterDrop,
         "timer" to Icons.Default.Timer,
